@@ -54,7 +54,7 @@ def get_content():
     temp = jdata["currently"]["temperature"]
     temp = Far2Celsius(temp)
 
-    msg.append("%sC" % temp)
+    msg.append(u"%s°C" % temp)
     msg.append(summary)
 
     return msg
