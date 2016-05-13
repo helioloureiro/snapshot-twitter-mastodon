@@ -133,7 +133,8 @@ def TweetPhoto():
         im.paste( ImageOps.colorize(w, (0,0,0), (255,255,255)), (0,0), w)
         im.save(filename)
 
-        msg = "%s #weather" % " ".join(msg)
+        # adding the credit to the right guys (awesome guys btw)
+        msg = "%s #weather via http://forecast.io/" % " ".join(msg)
         print msg
         try:
             tw.PostMedia(status = msg,media = filename)
