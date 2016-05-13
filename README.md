@@ -19,3 +19,9 @@ following the ConfigParser format, which is mostly like:
 [twitter]
 key = abced
 anotherkey = 12312313123
+
+Weather
+=======
+
+It was extendend to use as script to gather weather information via
+http://forecast.io API.
