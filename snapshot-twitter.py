@@ -94,7 +94,7 @@ def TweetPhoto():
     cam.stop()
 
     if not os.path.exists(SAVEDIR):
-        os.makedir(SAVEDIR)
+        os.makedirs(SAVEDIR)
     timestamp = time.strftime("%Y-%m-%d_%H%M%S", time.localtime())
     year = time.strftime("%Y", time.localtime())
     filename = "%s/%s.jpg" % (SAVEDIR, timestamp)
