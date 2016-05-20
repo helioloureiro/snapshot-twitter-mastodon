@@ -54,8 +54,8 @@ def get_content():
     temp = jdata["currently"]["temperature"]
     temp = Far2Celsius(temp)
 
-    msg.append(u"%s°C" % temp)
-    msg.append(summary)
+    msg.append(u"Temperature: %s°C" % temp)
+    msg.append("Summary: %s" %summary)
 
     return msg
 
@@ -75,22 +75,31 @@ def ReadConfig():
     wth_key = cfg.get("FORECAST.IO", "KEY")
     wth_loc = cfg.get("FORECAST.IO", "LOCATION")
 
-def TweetPhoto():
+def WeatherScreenshot():
     """
     """
     print "Pygame init"
     pygame.init()
     print "Camera init"
     pygame.camera.init()
+    device = None
+    if os.path.exists("/dev/video1"):
+        device = "/dev/video1"
+    elif os.path.exists("/dev/video0"):
+        device = "/dev/video0"
+    if not device:
+        print "Not webcam found.  Aborting..."
+        sys.exit(1)
     # you can get your camera resolution by command "uvcdynctrl -f"
-    cam = pygame.camera.Camera("/dev/video0", IMGSIZE)
+    cam = pygame.camera.Camera(device, IMGSIZE)
 
     print "Camera start"
     cam.start()
-    time.sleep(5)
+    # commented cause it was generating high exposition on pictures
+    #time.sleep(5)
     print "Getting image"
     image = cam.get_image()
-    time.sleep(1)
+    #time.sleep(1)
     print "Camera stop"
     cam.stop()
 
@@ -121,16 +130,26 @@ def TweetPhoto():
     if msg:
         msg_body = "\n".join(msg[1:])
         im = Image.open(filename)
-
-        f_top = ImageFont.truetype(font="Arial", size=60)
-        f_body = ImageFont.truetype(font="Arial", size=20)
+        # just get truetype fonts on package ttf-mscorefonts-installer
+        try:
+            f_top = ImageFont.truetype(font="Arial", size=60)
+        except TypeError:
+            # older versions hasn't font and require full path
+            arialpath = "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"
+            f_top = ImageFont.truetype(arialpath, size=60)
+        try:
+            f_body = ImageFont.truetype(font="Arial", size=20)
+        except TypeError:
+            # older versions hasn't font and require full path
+            arialpath = "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"
+            f_body = ImageFont.truetype(arialpath, size=20)
         txt = Image.new('L', IMGSIZE)
         d = ImageDraw.Draw(txt)
         d.text( (10, 10), msg[0], font=f_top, fill=255)
         d.text( (10, 80), msg_body, font=f_body, fill=255)
         w = txt.rotate(0, expand=1)
 
-        im.paste( ImageOps.colorize(w, (0,0,0), (255,255,255)), (0,0), w)
+        im.paste(ImageOps.colorize(w, (0,0,0), (255,255,255)), (0,0), w)
         im.save(filename)
 
         # adding the credit to the right guys (awesome guys btw)
@@ -140,7 +159,9 @@ def TweetPhoto():
             tw.PostMedia(status = msg,media = filename)
             print "done!"
         except:
-            None
+            # it failed so... deal w/ it.
+            pass
+        sys.exit(0)
     else:
         print "no message available"
     #print "Removing media file %s" % filename
@@ -149,6 +170,6 @@ def TweetPhoto():
 
 if __name__ == '__main__':
     try:
-        TweetPhoto()
+        WeatherScreenshot()
     except KeyboardInterrupt:
         sys.exit(0)
