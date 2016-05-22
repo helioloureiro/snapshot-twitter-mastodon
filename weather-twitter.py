@@ -99,6 +99,14 @@ def WeatherScreenshot():
     # commented cause it was generating high exposition on pictures
     #time.sleep(5)
     print "Getting image"
+    counter = 10
+    while counter:
+        if cam.query_image():
+            print " * camera ready"
+            break
+        print " * waiting for camera (%d)" % counter
+        time.sleep(1)
+        counter -= 1
     image = cam.get_image()
     #time.sleep(1)
     print "Camera stop"
