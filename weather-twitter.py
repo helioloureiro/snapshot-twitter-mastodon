@@ -27,10 +27,11 @@ if os.uname()[1] == 'elxaf7qtt32':
     # my laptop
     HOMEDIR = "/home/ehellou"
 
-
 configuration = "%s/.twitterc" % HOMEDIR
 SAVEDIR = "%s/weather" % HOMEDIR
 IMGSIZE = (1280, 720)
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
 
 def Far2Celsius(temp):
     temp = float(temp)
@@ -38,7 +39,7 @@ def Far2Celsius(temp):
     return "%0.2f" % celsius
 
 def get_content():
-    timestamp = time.strftime("%Y-%m-%d %H:%M", time.localtime())
+    timestamp = time.strftime("Date: %Y-%m-%d %H:%M", time.localtime())
     msg = []
     msg.append("Stockholm")
     msg.append(timestamp)
@@ -146,19 +147,27 @@ def WeatherScreenshot():
         txt = Image.new('L', IMGSIZE)
         d = ImageDraw.Draw(txt)
         d.text( (10, 10), msg[0], font=f_top, fill=255)
-        d.text( (10, 80), msg_body, font=f_body, fill=255)
+        position = 80
+        for m in msg[1:]:
+            d.text( (10, position), m, font=f_body, fill=255)
+            position += 20
         w = txt.rotate(0, expand=1)
 
-        im.paste(ImageOps.colorize(w, (0,0,0), (255,255,255)), (0,0), w)
+        im.paste(ImageOps.colorize(w, BLACK, BLACK), (0,0), w)
         im.save(filename)
 
         # adding the credit to the right guys (awesome guys btw)
-        msg = "%s #weather via http://forecast.io/" % " ".join(msg)
-        print msg
+        msg = u"%s \nvia http://forecast.io/" % "\n".join(msg)
+        try:
+            print u"%s" % msg
+        except UnicodeEncodeError:
+            # I just hate this...
+            pass
         try:
             tw.PostMedia(status = msg,media = filename)
             print "done!"
         except:
+            print "Failed for some reason..."
             # it failed so... deal w/ it.
             pass
         sys.exit(0)
