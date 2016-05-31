@@ -32,7 +32,7 @@ SAVEDIR = "%s/weather" % HOMEDIR
 IMGSIZE = (1280, 720)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-DISCARDFRAMES = 30
+DISCARDFRAMES = 2 * 30
 
 def Far2Celsius(temp):
     temp = float(temp)
@@ -110,11 +110,14 @@ def WeatherScreenshot():
         counter -= 1
     # idea from https://codeplasma.com/2012/12/03/getting-webcam-images-with-python-and-opencv-2-for-real-this-time/
     # get a set of pictures to be discarded and adjust camera
+    print " * calibrating white balance: ",
     for x in xrange(DISCARDFRAMES):
         while not cam.query_image():
             time.sleep(1)
         image = cam.get_image()
+        print ".",
     image = cam.get_image()
+    print " "
     #time.sleep(1)
     print "Camera stop"
     cam.stop()
