@@ -100,7 +100,7 @@ def GetPhoto():
 
     print "Camera start"
     cam.start()
-    time.sleep(30)
+    time.sleep(3)
     print "Getting image"
     counter = 10
     while counter:
