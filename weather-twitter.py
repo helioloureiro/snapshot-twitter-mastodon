@@ -21,6 +21,7 @@ import json
 import requests
 import Image
 import ImageFont, ImageDraw, ImageOps
+import threading
 
 # test machine?
 if os.uname()[1] == 'elxaf7qtt32':
@@ -77,9 +78,11 @@ def ReadConfig():
     wth_key = cfg.get("FORECAST.IO", "KEY")
     wth_loc = cfg.get("FORECAST.IO", "LOCATION")
 
-def WeatherScreenshot():
+def GetPhoto():
+    global filename
     """
     """
+    filename = None
     print "Pygame init"
     pygame.init()
     print "Camera init"
@@ -97,8 +100,7 @@ def WeatherScreenshot():
 
     print "Camera start"
     cam.start()
-    # commented cause it was generating high exposition on pictures
-    #time.sleep(5)
+    time.sleep(30)
     print "Getting image"
     counter = 10
     while counter:
@@ -130,6 +132,11 @@ def WeatherScreenshot():
     print "Saving file %s" % filename
     pygame.image.save(image, filename)
 
+def WeatherScreenshot():
+
+    th = threading.Thread(target=GetPhoto)
+    th.start()
+
     ReadConfig()
 
     print "Autenticating in Twitter"
@@ -143,6 +150,7 @@ def WeatherScreenshot():
         )
     print "Posting...",
     msg = get_content()
+    th.join()
     if not msg:
         msg = "Just another shot at %s" % \
             time.strftime("%H:%M", time.localtime())
