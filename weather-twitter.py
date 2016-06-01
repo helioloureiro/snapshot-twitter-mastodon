@@ -50,8 +50,9 @@ def get_content():
     req = requests.get(url)
     jdata = json.loads(req.text)
 
-    print jdata.keys()
-    print jdata["currently"]
+    # this was just to follow up - not needed
+    #print jdata.keys()
+    #print jdata["currently"]
 
     summary = jdata["currently"]["summary"]
     temp = jdata["currently"]["temperature"]
