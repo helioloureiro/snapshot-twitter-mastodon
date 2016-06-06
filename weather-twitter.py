@@ -22,6 +22,7 @@ import requests
 import Image
 import ImageFont, ImageDraw, ImageOps
 import threading
+from picturequality import brightness
 
 # test machine?
 if os.uname()[1] == 'elxaf7qtt32':
@@ -79,7 +80,7 @@ def ReadConfig():
     wth_key = cfg.get("FORECAST.IO", "KEY")
     wth_loc = cfg.get("FORECAST.IO", "LOCATION")
 
-def GetPhoto():
+def GetPhoto(f = None):
     global filename
     """
     """
@@ -127,11 +128,17 @@ def GetPhoto():
 
     if not os.path.exists(SAVEDIR):
         os.makedirs(SAVEDIR)
-    timestamp = time.strftime("%Y-%m-%d_%H%M%S", time.localtime())
-    year = time.strftime("%Y", time.localtime())
-    filename = "%s/%s.jpg" % (SAVEDIR, timestamp)
+    if not f:
+        timestamp = time.strftime("%Y-%m-%d_%H%M%S", time.localtime())
+        year = time.strftime("%Y", time.localtime())
+        filename = "%s/%s.jpg" % (SAVEDIR, timestamp)
+    else:
+        filename = f
     print "Saving file %s" % filename
     pygame.image.save(image, filename)
+    resp = brightness(filename)
+    if resp != 0:
+        GetPhoto(filename)
 
 def WeatherScreenshot():
 
