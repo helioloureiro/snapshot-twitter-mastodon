@@ -32,5 +32,4 @@ Just found it requires some extra packages to work (at the least on raspbian):
  
 Bugs
 ====
-Sunny or to light days are making unreadable.  Maybe improve to use some
-exposure measurement to check picture quality.
+Image acquisition now takes longer than before.  It can cause some race conditions.
