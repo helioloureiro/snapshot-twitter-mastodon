@@ -30,7 +30,7 @@ Just found it requires some extra packages to work (at the least on raspbian):
  * ttf-mscorefonts-installer
  * python-imaging
  
- Bugs
- ====
- Sunny or to light days are making unreadable.  Maybe improve to use some
- exposure measurement to check picture quality.
+Bugs
+====
+Sunny or to light days are making unreadable.  Maybe improve to use some
+exposure measurement to check picture quality.
