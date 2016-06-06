@@ -39,7 +39,7 @@ DISCARDFRAMES = 2 * 30
 def Far2Celsius(temp):
     temp = float(temp)
     celsius = (temp - 32) * 5 / 9
-    return "%0.2f" % celsius
+    return "%0.1f" % celsius
 
 def get_content():
     timestamp = time.strftime("Date: %Y-%m-%d %H:%M", time.localtime())
