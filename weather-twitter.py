@@ -34,7 +34,7 @@ SAVEDIR = "%s/weather" % HOMEDIR
 IMGSIZE = (1280, 720)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-DISCARDFRAMES = 2 * 30
+DISCARDFRAMES = 10
 
 def Far2Celsius(temp):
     temp = float(temp)
