@@ -43,14 +43,19 @@ def brightness(filename, quality=15, verbose=False):
     for k in sorted(RANK, key=RANK.get, reverse=True):
         amount = RANK[k]
         # if low than 15%, ignore
-        if amount < (quality /100.0 * pic_size):
+        if amount < (.15 * pic_size):
             continue
         if verbose:
-            print k, "=>", RANK[k]
+            print k, "=>", RANK[k], "(", )
         color_order.append(k)
     if color_order:
         if verbose:
             print color_order
+        # get first color
+        k = color_order[0]
+        v = RANK[k]
+        if (v / pic_size * 100.) >= quality:
+            return 0
         return -1
     return 0
 
