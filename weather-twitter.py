@@ -121,7 +121,7 @@ def ReadConfig():
     wth_key = cfg.get("FORECAST.IO", "KEY")
     wth_loc = cfg.get("FORECAST.IO", "LOCATION")
 
-def GetPhoto(f = None):
+def GetPhoto(f = None, quality = None):
     global filename, FAILCOUNTER
     """
     """
@@ -180,7 +180,7 @@ def GetPhoto(f = None):
         filename = f
     print "Saving file %s" % filename
     pygame.image.save(image, filename)
-    resp = brightness(filename)
+    resp = brightness(filename, quality=quality)
     if resp != 0:
         print "Low quality detected.  Trying again."
         FAILCOUNTER -= 1
