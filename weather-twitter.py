@@ -23,6 +23,7 @@ import Image
 import ImageFont, ImageDraw, ImageOps
 import threading
 from picturequality import brightness
+import re
 
 # test machine?
 if os.uname()[1] == 'elxaf7qtt32':
@@ -35,6 +36,45 @@ IMGSIZE = (1280, 720)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 DISCARDFRAMES = 10
+LOCKDIR = "/tmp"
+LOCKPREFIX = ".weather"
+
+mypid = os.getpid()
+lockfile = "%s/%s.%d" % (LOCKDIR, LOCKPREFIX, mypid)
+
+def lockpid():
+    """
+    Create a pid based lock file.
+    Return true to "locked" and false in case of failure (already in use).
+    """
+    directory = os.listdir(LOCKDIR)
+    lockedfile = None
+    for filename in directory:
+        if not re.search(LOCKPREFIX, filename): continue
+        lockedfile = filename
+    if lockedfile:
+        # double check
+        p = lockedfile.split(".")[-1]
+        pid = int(p)
+        try:
+            # SIGNAL 18 is SIGCONT
+            # it should be ignored
+            os.kill(pid, 18)
+            print "Process already running"
+            return False
+        except OSError:
+            print "Dead file found.  Removing."
+            os.unlink("%s/%s" % (LOCKDIR, lockedfile))
+
+    fd = open(lockfile, 'w')
+    fd.write("%d\n" % mypid)
+    fd.flush()
+    fd.close()
+    return True
+
+def unlockpid():
+    if os.path.exists(lockfile):
+        os.unlink(lockfile)
 
 def Far2Celsius(temp):
     temp = float(temp)
@@ -213,6 +253,8 @@ def WeatherScreenshot():
 
 if __name__ == '__main__':
     try:
-        WeatherScreenshot()
+        if lockpid():
+            WeatherScreenshot()
+            unlockpid()
     except KeyboardInterrupt:
         sys.exit(0)
