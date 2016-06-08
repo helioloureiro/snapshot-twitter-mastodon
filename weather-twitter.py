@@ -38,6 +38,7 @@ WHITE = (255, 255, 255)
 DISCARDFRAMES = 10
 LOCKDIR = "/tmp"
 LOCKPREFIX = ".weather"
+FAILCOUNTER = 10
 
 mypid = os.getpid()
 lockfile = "%s/%s.%d" % (LOCKDIR, LOCKPREFIX, mypid)
@@ -121,9 +122,12 @@ def ReadConfig():
     wth_loc = cfg.get("FORECAST.IO", "LOCATION")
 
 def GetPhoto(f = None):
-    global filename
+    global filename, FAILCOUNTER
     """
     """
+    if FAILCOUNTER < 0:
+        print "Fail counter reached maximum attempts.  Failed."
+        return
     filename = None
     print "Pygame init"
     pygame.init()
@@ -178,6 +182,8 @@ def GetPhoto(f = None):
     pygame.image.save(image, filename)
     resp = brightness(filename)
     if resp != 0:
+        print "Low quality detected.  Trying again."
+        FAILCOUNTER -= 1
         GetPhoto(filename)
 
 def WeatherScreenshot():
@@ -199,6 +205,9 @@ def WeatherScreenshot():
     print "Posting...",
     msg = get_content()
     th.join()
+    if FAILCOUNTER < 0:
+        print "Failed to acquire image.  Quitting..."
+        sys.exit(1)
     if not msg:
         msg = "Just another shot at %s" % \
             time.strftime("%H:%M", time.localtime())
