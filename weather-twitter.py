@@ -180,7 +180,10 @@ def GetPhoto(f = None, quality = None):
         filename = f
     print "Saving file %s" % filename
     pygame.image.save(image, filename)
-    resp = brightness(filename, quality=quality)
+    if quality:
+        resp = brightness(filename, quality=quality)
+    else:
+            resp = brightness(filename)
     if resp != 0:
         print "Low quality detected.  Trying again."
         FAILCOUNTER -= 1
