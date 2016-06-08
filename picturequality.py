@@ -13,7 +13,7 @@ def usage(msg):
         sys.exit(0)
     sys.exit(1)
 
-def brightness(filename):
+def brightness(filename, quality=15):
     """
     source: http://stackoverflow.com/questions/6442118/python-measuring-pixel-brightness
     """
@@ -42,7 +42,7 @@ def brightness(filename):
     for k in sorted(RANK, key=RANK.get, reverse=True):
         amount = RANK[k]
         # if low than 15%, ignore
-        if amount < (.15 * pic_size):
+        if amount < (quality / 100 * pic_size):
             continue
         print k, "=>", RANK[k]
         color_order.append(k)

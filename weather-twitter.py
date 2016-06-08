@@ -184,7 +184,11 @@ def GetPhoto(f = None):
     if resp != 0:
         print "Low quality detected.  Trying again."
         FAILCOUNTER -= 1
-        GetPhoto(filename)
+        if FAILCOUNTER < 6:
+            # lower 35% of dark or ligth is ok
+            GetPhoto(filename, quality=35)
+        else:
+            GetPhoto(filename)
 
 def WeatherScreenshot():
 
