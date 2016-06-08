@@ -13,7 +13,7 @@ def usage(msg):
         sys.exit(0)
     sys.exit(1)
 
-def brightness(filename, quality=15):
+def brightness(filename, quality=15, verbose=False):
     """
     source: http://stackoverflow.com/questions/6442118/python-measuring-pixel-brightness
     """
@@ -38,16 +38,19 @@ def brightness(filename, quality=15):
 
     color_order = []
     pic_size = X_f * Y_f
-    print "Picture size:", pic_size
+    if verbose:
+        print "Picture size:", pic_size
     for k in sorted(RANK, key=RANK.get, reverse=True):
         amount = RANK[k]
         # if low than 15%, ignore
-        if amount < (quality / 100 * pic_size):
+        if amount < (quality /100.0 * pic_size):
             continue
-        print k, "=>", RANK[k]
+        if verbose:
+            print k, "=>", RANK[k]
         color_order.append(k)
     if color_order:
-        print color_order
+        if verbose:
+            print color_order
         return -1
     return 0
 
