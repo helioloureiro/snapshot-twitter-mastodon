@@ -54,7 +54,7 @@ def brightness(filename, quality=15, verbose=False):
         # get first color
         k = color_order[0]
         v = RANK[k]
-        if (v / pic_size * 100.) >= quality:
+        if (v / pic_size * 100.) <= quality:
             return 0
         return -1
     return 0
