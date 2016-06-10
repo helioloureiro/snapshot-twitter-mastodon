@@ -188,8 +188,8 @@ def GetPhoto(f = None, quality = None):
         print "Low quality detected.  Trying again."
         FAILCOUNTER -= 1
         if FAILCOUNTER < 6:
-            # lower 35% of dark or ligth is ok
-            GetPhoto(filename, quality=35)
+            # lower 25% of dark or ligth is ok
+            GetPhoto(filename, quality=25)
         else:
             GetPhoto(filename)
 
