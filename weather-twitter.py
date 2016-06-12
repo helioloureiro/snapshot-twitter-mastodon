@@ -39,6 +39,8 @@ DISCARDFRAMES = 10
 LOCKDIR = "/tmp"
 LOCKPREFIX = ".weather"
 FAILCOUNTER = 10
+# quality threshold
+THRESHOLD=20
 
 mypid = os.getpid()
 lockfile = "%s/%s.%d" % (LOCKDIR, LOCKPREFIX, mypid)
@@ -189,7 +191,7 @@ def GetPhoto(f = None, quality = None):
         FAILCOUNTER -= 1
         if FAILCOUNTER < 6:
             # lower 25% of dark or ligth is ok
-            GetPhoto(filename, quality=25)
+            GetPhoto(filename, quality=THRESHOLD)
         else:
             GetPhoto(filename)
 
