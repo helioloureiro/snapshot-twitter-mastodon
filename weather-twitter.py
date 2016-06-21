@@ -24,11 +24,10 @@ import ImageFont, ImageDraw, ImageOps
 import threading
 from picturequality import brightness
 import re
-import logging
 
 # stop annoying messages
 # src: http://stackoverflow.com/questions/11029717/how-do-i-disable-log-messages-from-the-requests-library
-logging.getLogger("urllib3").setLevel(logging.CRITICAL)
+requests.packages.urllib3.disable_warnings()
 
 # test machine?
 if os.uname()[1] == 'elxaf7qtt32':
@@ -46,9 +45,14 @@ LOCKPREFIX = ".weather"
 FAILCOUNTER = 10
 # quality threshold
 THRESHOLD=18
+DEBUG = True
 
 mypid = os.getpid()
 lockfile = "%s/%s.%d" % (LOCKDIR, LOCKPREFIX, mypid)
+
+def debug(msg):
+    if DEBUG:
+        print msg
 
 def lockpid():
     """
@@ -71,7 +75,7 @@ def lockpid():
             print "Process already running"
             return False
         except OSError:
-            print "Dead file found.  Removing."
+            debug("Dead file found (%s).  Removing." % lockedfile)
             os.unlink("%s/%s" % (LOCKDIR, lockedfile))
 
     fd = open(lockfile, 'w')
@@ -82,6 +86,7 @@ def lockpid():
 
 def unlockpid():
     if os.path.exists(lockfile):
+        debug("Removing lock")
         os.unlink(lockfile)
 
 def Far2Celsius(temp):
@@ -132,13 +137,14 @@ def GetPhoto(f = None, quality = None):
     global filename, FAILCOUNTER
     """
     """
+    debug("GetPhoto: failcounter=%d" % FAILCOUNTER)
     if FAILCOUNTER < 0:
         print "Fail counter reached maximum attempts.  Failed."
         return
     filename = None
-    print "Pygame init"
+    debug("Pygame init")
     pygame.init()
-    print "Camera init"
+    debug("Camera init")
     pygame.camera.init()
     device = None
     if os.path.exists("/dev/video1"):
@@ -151,30 +157,30 @@ def GetPhoto(f = None, quality = None):
     # you can get your camera resolution by command "uvcdynctrl -f"
     cam = pygame.camera.Camera(device, IMGSIZE)
 
-    print "Camera start"
+    debug("Camera start")
     cam.start()
     time.sleep(3)
-    print "Getting image"
+    debug("Getting image ritual")
     counter = 10
     while counter:
         if cam.query_image():
-            print " * camera ready"
+            debug(" * camera ready")
             break
-        print " * waiting for camera (%d)" % counter
+        debug(" * waiting for camera (%d)" % counter)
         time.sleep(1)
         counter -= 1
     # idea from https://codeplasma.com/2012/12/03/getting-webcam-images-with-python-and-opencv-2-for-real-this-time/
     # get a set of pictures to be discarded and adjust camera
-    print " * calibrating white balance: ",
+    debug(" * calibrating white balance: ",)
     for x in xrange(DISCARDFRAMES):
         while not cam.query_image():
             time.sleep(1)
         image = cam.get_image()
-        print ".",
+        debug(".",)
     image = cam.get_image()
-    print " "
+    debug(" ")
     #time.sleep(1)
-    print "Camera stop"
+    debug("Camera stop")
     cam.stop()
 
     if not os.path.exists(SAVEDIR):
@@ -185,16 +191,18 @@ def GetPhoto(f = None, quality = None):
         filename = "%s/%s.jpg" % (SAVEDIR, timestamp)
     else:
         filename = f
-    print "Saving file %s" % filename
+    debug("Saving file %s" % filename)
     pygame.image.save(image, filename)
     if quality:
         resp = brightness(filename, quality=quality)
     else:
-            resp = brightness(filename)
+        resp = brightness(filename)
+    debug("Quality response=%d" % resp)
     if resp != 0:
-        print "Low quality detected.  Trying again."
+        debug("Low quality detected.  Trying again.")
         FAILCOUNTER -= 1
         if FAILCOUNTER < 6:
+            debug("Trying with lower threshold for quality")
             # lower 20% of dark or ligth is ok
             GetPhoto(filename, quality=THRESHOLD)
         else:
@@ -216,7 +224,7 @@ def WeatherScreenshot():
         access_token_key = acc_key,
         access_token_secret = acc_sec
         )
-    print "Posting...",
+    debug("Posting...",)
     msg = get_content()
     th.join()
     if FAILCOUNTER < 0:
@@ -267,7 +275,6 @@ def WeatherScreenshot():
             print "Failed for some reason..."
             # it failed so... deal w/ it.
             pass
-        sys.exit(0)
     else:
         print "no message available"
     #print "Removing media file %s" % filename
