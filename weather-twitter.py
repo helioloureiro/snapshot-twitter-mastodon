@@ -24,6 +24,11 @@ import ImageFont, ImageDraw, ImageOps
 import threading
 from picturequality import brightness
 import re
+import logging
+
+# stop annoying messages
+# src: http://stackoverflow.com/questions/11029717/how-do-i-disable-log-messages-from-the-requests-library
+logging.getLogger("urllib3").setLevel(logging.CRITICAL)
 
 # test machine?
 if os.uname()[1] == 'elxaf7qtt32':
