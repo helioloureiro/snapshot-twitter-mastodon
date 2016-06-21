@@ -140,6 +140,7 @@ def GetPhoto(f = None, quality = None):
     global filename, FAILCOUNTER
     """
     """
+    debug("GetPhoto [%s]" % time.ctime())
     debug("GetPhoto: failcounter=%d" % FAILCOUNTER)
     if FAILCOUNTER < 0:
         print "Fail counter reached maximum attempts.  Failed."
