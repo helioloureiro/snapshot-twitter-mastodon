@@ -124,7 +124,7 @@ def ReadConfig():
     global cons_key, cons_sec, acc_key, acc_sec, wth_key, wth_loc
 
     cfg = ConfigParser.ConfigParser()
-    print "Reading configuration: %s" % configuration
+    debug("Reading configuration: %s" % configuration)
     if not os.path.exists(configuration):
         print "Failed to find configuration file %s" % configuration
         sys.exit(1)
@@ -144,7 +144,7 @@ def GetPhoto(f = None, quality = None):
     debug("GetPhoto: failcounter=%d" % FAILCOUNTER)
     if FAILCOUNTER < 0:
         print "Fail counter reached maximum attempts.  Failed."
-        return
+        sys.exit(1)
     filename = None
     debug("Pygame init")
     pygame.init()
@@ -218,7 +218,7 @@ def WeatherScreenshot():
 
     ReadConfig()
 
-    print "Autenticating in Twitter"
+    debug("Autenticating in Twitter")
     # App python-tweeter
     # https://dev.twitter.com/apps/815176
     tw = twitter.Api(
