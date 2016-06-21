@@ -44,15 +44,18 @@ LOCKDIR = "/tmp"
 LOCKPREFIX = ".weather"
 FAILCOUNTER = 10
 # quality threshold
-THRESHOLD=18
+THRESHOLD=15
 DEBUG = True
 
 mypid = os.getpid()
 lockfile = "%s/%s.%d" % (LOCKDIR, LOCKPREFIX, mypid)
+plock = threading.Lock() # control print
 
 def debug(msg):
     if DEBUG:
+        plock.acquire()
         print msg
+        plock.release()
 
 def lockpid():
     """
@@ -171,14 +174,14 @@ def GetPhoto(f = None, quality = None):
         counter -= 1
     # idea from https://codeplasma.com/2012/12/03/getting-webcam-images-with-python-and-opencv-2-for-real-this-time/
     # get a set of pictures to be discarded and adjust camera
-    debug(" * calibrating white balance: ",)
+    debug(" * calibrating white balance: ")
     for x in xrange(DISCARDFRAMES):
         while not cam.query_image():
             time.sleep(1)
         image = cam.get_image()
-        debug(".",)
+        debug("." * x)
     image = cam.get_image()
-    debug(" ")
+    #debug(" ")
     #time.sleep(1)
     debug("Camera stop")
     cam.stop()
@@ -193,20 +196,19 @@ def GetPhoto(f = None, quality = None):
         filename = f
     debug("Saving file %s" % filename)
     pygame.image.save(image, filename)
-    if quality:
-        resp = brightness(filename, quality=quality)
-    else:
-        resp = brightness(filename)
+    resp = brightness(filename)
     debug("Quality response=%d" % resp)
-    if resp != 0:
-        debug("Low quality detected.  Trying again.")
+    if resp:
+        debug("Low quality detected.  Fails=%d" % FAILCOUNTER)
         FAILCOUNTER -= 1
         if FAILCOUNTER < 6:
-            debug("Trying with lower threshold for quality")
-            # lower 20% of dark or ligth is ok
-            GetPhoto(filename, quality=THRESHOLD)
-        else:
-            GetPhoto(filename)
+            if (resp <= THRESHOLD):
+                debug("Not best quality, but acceptable")
+                return 0
+        debug("Trying with lower threshold for quality")
+        # lower 20% of dark or ligth is ok
+        debug("Low quality detected.  Trying again.")
+        GetPhoto(filename)
 
 def WeatherScreenshot():
 
@@ -270,7 +272,7 @@ def WeatherScreenshot():
             pass
         try:
             tw.PostMedia(status = msg,media = filename)
-            print "done!"
+            debug("done!")
         except:
             print "Failed for some reason..."
             # it failed so... deal w/ it.

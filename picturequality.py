@@ -17,6 +17,8 @@ def brightness(filename, quality=15, verbose=False):
     """
     source: http://stackoverflow.com/questions/6442118/python-measuring-pixel-brightness
     """
+    if verbose:
+        print "Verbose mode enabled"
     img = Image.open(filename)
     #Convert the image te RGB if it is a .gif for example
     img = img.convert ('RGB')
@@ -46,17 +48,26 @@ def brightness(filename, quality=15, verbose=False):
         if amount < (.15 * pic_size):
             continue
         if verbose:
-            print "%d => %d (%02f)" % (k, RANK[k], RANK[k] * 100.0 / pic_size)
+            print "%d => %d (%0.2f%s)" % \
+                (k, RANK[k], RANK[k] * 100.0 / pic_size, '%')
         color_order.append(k)
+    if not color_order:
+        if verbose:
+            print "No large matrix found."
+        return 0
     if color_order:
         if verbose:
-            print color_order
+            print "Top color index:", color_order
         # get first color
         k = color_order[0]
         v = RANK[k]
-        if (v / pic_size * 100.) <= quality:
-            return 0
-        return -1
+        v = float(v)
+        # let caller decide what to do w/ result
+        # the pctg of bad quality
+        q = int(v/pic_size * 100)
+        if verbose:
+            print "Pctg w/ same color:", q
+            return q
     return 0
 
 def main():
@@ -65,9 +76,9 @@ def main():
     img = sys.argv[1]
     if not os.path.exists(img):
         usage("ERROR: File not found")
-    r = brightness(img)
-    if r < 0:
-        print "%s: low quality" % img
+    r = brightness(img, verbose=True)
+    if r > 15:
+        print "%s: low quality (>15%%)" % img
         sys.exit(r)
     else:
         print "%s: good or acceptable quality" % img
