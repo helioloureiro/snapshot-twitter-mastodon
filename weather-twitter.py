@@ -98,11 +98,13 @@ def Far2Celsius(temp):
     return "%0.1f" % celsius
 
 def get_content():
+    debug("Getting text content")
     timestamp = time.strftime("Date: %Y-%m-%d %H:%M", time.localtime())
     msg = []
     msg.append("Stockholm")
     msg.append(timestamp)
 
+    debug(" * requesting json about weather")
     url = "https://api.forecast.io/forecast/%s/%s" % (wth_key, wth_loc)
     req = requests.get(url)
     jdata = json.loads(req.text)
@@ -111,6 +113,7 @@ def get_content():
     #print jdata.keys()
     #print jdata["currently"]
 
+    debug(" * converting from Farenheit to Celsius")
     summary = jdata["currently"]["summary"]
     temp = jdata["currently"]["temperature"]
     temp = Far2Celsius(temp)
@@ -118,6 +121,7 @@ def get_content():
     msg.append(u"Temperature: %s°C" % temp)
     msg.append("Summary: %s" %summary)
 
+    debug(" * * Weather update finished")
     return msg
 
 def ReadConfig():
@@ -140,7 +144,6 @@ def GetPhoto(f = None, quality = None):
     global filename, FAILCOUNTER
     """
     """
-    debug("GetPhoto [%s]" % time.ctime())
     debug("GetPhoto: failcounter=%d" % FAILCOUNTER)
     if FAILCOUNTER < 0:
         print "Fail counter reached maximum attempts.  Failed."
@@ -181,6 +184,7 @@ def GetPhoto(f = None, quality = None):
             time.sleep(1)
         image = cam.get_image()
         debug("." * x)
+    debug(" * * getting image")
     image = cam.get_image()
     #debug(" ")
     #time.sleep(1)
@@ -212,7 +216,8 @@ def GetPhoto(f = None, quality = None):
         GetPhoto(filename)
 
 def WeatherScreenshot():
-
+    debug("\n ### WeatherScreenshot [%s] ### " % time.ctime())
+    debug("Threading image acquisition")
     th = threading.Thread(target=GetPhoto)
     th.start()
 
@@ -227,7 +232,7 @@ def WeatherScreenshot():
         access_token_key = acc_key,
         access_token_secret = acc_sec
         )
-    debug("Posting...",)
+    debug("Retrieving info...")
     msg = get_content()
     th.join()
     if FAILCOUNTER < 0:
