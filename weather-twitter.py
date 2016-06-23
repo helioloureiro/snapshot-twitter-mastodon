@@ -257,17 +257,21 @@ def WeatherScreenshot():
             # older versions hasn't font and require full path
             arialpath = "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"
             f_body = ImageFont.truetype(arialpath, size=20)
-        txt = Image.new('L', IMGSIZE)
-        d = ImageDraw.Draw(txt)
-        d.text( (10, 10), msg[0], font=f_top, fill=255)
-        position = 80
-        for m in msg[1:]:
-            d.text( (10, position), m, font=f_body, fill=255)
-            position += 20
-        w = txt.rotate(0, expand=1)
 
-        im.paste(ImageOps.colorize(w, BLACK, BLACK), (0,0), w)
-        im.save(filename)
+        # SHADOW
+        step = 1
+        for c in [ WHITE, BLACK ]:
+            txt = Image.new('L', IMGSIZE)
+            d = ImageDraw.Draw(txt)
+            d.text( (10 + step, 10 + step), msg[0], font=f_top, fill=255)
+            position = 80
+            for m in msg[1:]:
+                d.text( (10 + step, position + step), m, font=f_body, fill=255)
+                position += 20
+            w = txt.rotate(0, expand=1)
+            step = 0
+            im.paste(ImageOps.colorize(w, c, c), (0,0), w)
+            im.save(filename)
 
         # adding the credit to the right guys (awesome guys btw)
         msg = u"%s \nvia http://forecast.io/" % "\n".join(msg)
