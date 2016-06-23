@@ -24,6 +24,7 @@ import ImageFont, ImageDraw, ImageOps
 import threading
 from picturequality import brightness
 import re
+from random import randint
 
 # stop annoying messages
 # src: http://stackoverflow.com/questions/11029717/how-do-i-disable-log-messages-from-the-requests-library
@@ -36,6 +37,7 @@ if os.uname()[1] == 'elxaf7qtt32':
 
 configuration = "%s/.twitterc" % HOMEDIR
 SAVEDIR = "%s/weather" % HOMEDIR
+FAILDIR = "%s/images" % SAVEDIR
 IMGSIZE = (1280, 720)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -124,6 +126,19 @@ def get_content():
     debug(" * * Weather update finished")
     return msg
 
+def getfailedimg():
+    if not os.path.exists(FAILDIR):
+        debug("Directory not found: %s" % FAILDIR)
+        return None
+    IMGS = []
+    for filename in os.listdir(FAILDIR):
+        if not re.search("jpg|gif|png", filename):
+            continue
+        IMGS.append("%s/%s" % (FAILDIR, filename) )
+    # get a randomic one
+    pos = randint(0, len(IMGS) - 1)
+    return IMGS[pos]
+
 def ReadConfig():
     global cons_key, cons_sec, acc_key, acc_sec, wth_key, wth_loc
 
@@ -147,7 +162,14 @@ def GetPhoto(f = None, quality = None):
     debug("GetPhoto: failcounter=%d" % FAILCOUNTER)
     if FAILCOUNTER < 0:
         print "Fail counter reached maximum attempts.  Failed."
-        sys.exit(1)
+        debug("Trying to return a failed img.")
+        filename = getfailedimg()
+        if not filename:
+            sys.exit(1)
+        debug("Using failed img: %s" % filename)
+        # it needs to be 0ed or it will fail
+        FAILCOUNTER = 0
+        return 0
     filename = None
     debug("Pygame init")
     pygame.init()
