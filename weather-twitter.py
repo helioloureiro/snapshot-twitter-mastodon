@@ -244,6 +244,7 @@ def GetPhoto(f = None, quality = None):
         filename = f
     debug("Saving file %s" % filename)
     pygame.image.save(image, filename)
+    debug("Checking quality.")
     resp = brightness(filename, verbose=True)
     debug("Quality response=%d" % resp)
     if resp:
