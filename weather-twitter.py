@@ -45,15 +45,16 @@ WHITE = (255, 255, 255)
 DISCARDFRAMES = 10
 LOCKDIR = "/tmp"
 LOCKPREFIX = ".weather"
-FAILCOUNTER = 10
-# quality threshold
-THRESHOLD=15
+FAILCOUNTER = 10 # amount ot attempts to get a picture
+RETRIES = 10 # try to start webcam
+THRESHOLD=15 # quality threshold
 DEBUG = True
 
 mypid = os.getpid()
 lockfile = "%s/%s.%d" % (LOCKDIR, LOCKPREFIX, mypid)
 plock = threading.Lock() # control print
 failed_img = "%s.failed_img.jpg" % sys.argv[0]
+error_tries = FAILCOUNTER
 
 def debug(msg):
     if DEBUG:
@@ -102,6 +103,8 @@ def Far2Celsius(temp):
     return "%0.1f" % celsius
 
 def get_content():
+    global wth_key, wth_loc
+
     debug("Getting text content")
     timestamp = time.strftime("Date: %Y-%m-%d %H:%M", time.localtime())
     msg = []
@@ -160,7 +163,7 @@ def ReadConfig():
     wth_loc = cfg.get("FORECAST.IO", "LOCATION")
 
 def GetPhoto(f = None, quality = None):
-    global filename, FAILCOUNTER
+    global filename, FAILCOUNTER, error_tries
     """
     """
     debug("GetPhoto: failcounter=%d" % FAILCOUNTER)
@@ -194,7 +197,7 @@ def GetPhoto(f = None, quality = None):
     cam.start()
     time.sleep(3)
     debug("Getting image ritual")
-    counter = 10
+    counter = RETRIES
     while counter:
         if cam.query_image():
             debug(" * camera ready")
@@ -204,12 +207,18 @@ def GetPhoto(f = None, quality = None):
         counter -= 1
     # idea from https://codeplasma.com/2012/12/03/getting-webcam-images-with-python-and-opencv-2-for-real-this-time/
     # get a set of pictures to be discarded and adjust camera
+    debug(" * * RETRIES=%d" % RETRIES)
+    debug(" * * error_tries=%d" % error_tries)
+    debug(" * * FAILCOUNTER=%d" % FAILCOUNTER)
     debug(" * calibrating white balance: ")
-    for x in xrange(DISCARDFRAMES):
+    if (error_tries < 0):
+        error_tries = 0
+    for x in xrange(DISCARDFRAMES * ( error_tries - FAILCOUNTER + 1) ):
         while not cam.query_image():
             time.sleep(1)
         image = cam.get_image()
-        debug("." * x)
+        msg = "." * x + "(%d)" % x
+        debug(msg)
     debug(" * * getting image")
     image = cam.get_image()
     #debug(" ")
@@ -221,7 +230,7 @@ def GetPhoto(f = None, quality = None):
         os.makedirs(SAVEDIR)
     if not f:
         timestamp = time.strftime("%Y-%m-%d_%H%M%S", time.localtime())
-        year = time.strftime("%Y", time.localtime())
+        # year = time.strftime("%Y", time.localtime())
         filename = "%s/%s.jpg" % (SAVEDIR, timestamp)
     else:
         filename = f
@@ -300,7 +309,7 @@ def WeatherScreenshot():
             im.save(filename)
 
         # adding the credit to the right guys (awesome guys btw)
-        msg = u"%s \nvia http://forecast.io/" % "\n".join(msg)
+        msg = u"%s \nvia http://forecast.io/#/f/59.4029,17.9436" % "\n".join(msg)
         try:
             print u"%s" % msg
         except UnicodeEncodeError:
