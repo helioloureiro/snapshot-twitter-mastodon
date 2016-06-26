@@ -25,6 +25,7 @@ import threading
 from picturequality import brightness
 import re
 from random import randint
+import shutil
 
 # stop annoying messages
 # src: http://stackoverflow.com/questions/11029717/how-do-i-disable-log-messages-from-the-requests-library
@@ -52,6 +53,7 @@ DEBUG = True
 mypid = os.getpid()
 lockfile = "%s/%s.%d" % (LOCKDIR, LOCKPREFIX, mypid)
 plock = threading.Lock() # control print
+failed_img = "%s.failed_img.jpg" % sys.argv[0]
 
 def debug(msg):
     if DEBUG:
@@ -137,7 +139,9 @@ def getfailedimg():
         IMGS.append("%s/%s" % (FAILDIR, filename) )
     # get a randomic one
     pos = randint(0, len(IMGS) - 1)
-    return IMGS[pos]
+    chosen_one = IMGS[pos]
+    shutil.copy(chosen_one, failed_img)
+    return failed_img
 
 def ReadConfig():
     global cons_key, cons_sec, acc_key, acc_sec, wth_key, wth_loc
