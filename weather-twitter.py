@@ -25,7 +25,8 @@ import threading
 from picturequality import brightness
 import re
 from random import randint
-import shutil
+from shutil import copy
+from math import modf
 
 # stop annoying messages
 # src: http://stackoverflow.com/questions/11029717/how-do-i-disable-log-messages-from-the-requests-library
@@ -143,7 +144,7 @@ def getfailedimg():
     # get a randomic one
     pos = randint(0, len(IMGS) - 1)
     chosen_one = IMGS[pos]
-    shutil.copy(chosen_one, failed_img)
+    copy(chosen_one, failed_img)
     return failed_img
 
 def ReadConfig():
@@ -195,7 +196,13 @@ def GetPhoto(f = None, quality = None):
 
     debug("Camera start")
     cam.start()
-    time.sleep(3)
+    if FAILCOUNTER % 2:
+        debug("Darker image...")
+        time.sleep(1*FAILCOUNTER/FAILCOUNTER)
+    else:
+        debug("Lighter image...")
+        time.sleep(FAILCOUNTER/(1 + FAILCOUNTER))
+    #time.sleep(3)
     debug("Getting image ritual")
     counter = RETRIES
     while counter:
@@ -220,6 +227,7 @@ def GetPhoto(f = None, quality = None):
         msg = "." * x + "(%d)" % x
         debug(msg)
     debug(" * * getting image")
+    debug("Smile!")
     image = cam.get_image()
     #debug(" ")
     #time.sleep(1)
