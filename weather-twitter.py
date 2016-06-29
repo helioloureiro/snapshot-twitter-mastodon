@@ -24,7 +24,7 @@ import ImageFont, ImageDraw, ImageOps
 import threading
 from picturequality import brightness
 import re
-from random import randint
+from random import randint, random
 from shutil import copy
 from math import modf
 
@@ -50,12 +50,14 @@ FAILCOUNTER = 10 # amount ot attempts to get a picture
 RETRIES = 10 # try to start webcam
 THRESHOLD=15 # quality threshold
 DEBUG = True
+TIMEOUT =  10 * 60 # 10 minutes
 
 mypid = os.getpid()
 lockfile = "%s/%s.%d" % (LOCKDIR, LOCKPREFIX, mypid)
 plock = threading.Lock() # control print
 failed_img = "%s.failed_img.jpg" % sys.argv[0]
 error_tries = FAILCOUNTER
+start_time = time.time()
 
 def debug(msg):
     if DEBUG:
@@ -259,11 +261,35 @@ def GetPhoto(f = None, quality = None):
         debug("Low quality detected.  Trying again.")
         GetPhoto(filename)
 
+def TheWalkingDead(walker=None):
+    """
+    After a certain time, it is sure task won't be completed.
+    So kill it.
+    """
+    if not walker:
+        return
+    count = 0
+    while(walker.isAlive()):
+        time.sleep(random())
+        current_time = time.time()
+        delta = current_time - start_time
+        #print "Thread(%s) counter=%d delta=%0.2f" % (walker, count, delta)
+        if delta > TIMEOUT:
+            debug("Reached timeout.  Killing pid")
+            os.kill(mypid,9)
+        count += 1
+
+
 def WeatherScreenshot():
     debug("\n ### WeatherScreenshot [%s] ### " % time.ctime())
     debug("Threading image acquisition")
     th = threading.Thread(target=GetPhoto)
     th.start()
+    twd = threading.Thread(target=TheWalkingDead, args=(th,))
+    twd.walker = "Testing"
+    twd.start()
+    if not twd.is_alive():
+        sys.exit(1)
 
     ReadConfig()
 
@@ -279,6 +305,8 @@ def WeatherScreenshot():
     debug("Retrieving info...")
     msg = get_content()
     th.join()
+    twd.join()
+
     if FAILCOUNTER < 0:
         print "Failed to acquire image.  Quitting..."
         sys.exit(1)
@@ -324,6 +352,9 @@ def WeatherScreenshot():
         except UnicodeEncodeError:
             # I just hate this...
             pass
+        if sys.argv[-1] == "dry-run":
+            debug("Just dry-run mode.  Done!")
+            return
         try:
             tw.PostMedia(status = msg,media = filename)
             debug("done!")
