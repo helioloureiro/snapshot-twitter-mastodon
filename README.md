@@ -29,6 +29,7 @@ Requirements
 Just found it requires some extra packages to work (at the least on raspbian):
  * ttf-mscorefonts-installer
  * python-imaging
+ * uvcdynctrl
  
 Bugs
 ====
