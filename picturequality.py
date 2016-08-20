@@ -30,12 +30,18 @@ def brightness(filename, quality=15, verbose=False):
     (X_f, Y_f) = img.size
     #Get RGB
     time_i = time.time()
+    c = 0
     for i in xrange(X_i, X_f):
         for j in xrange(Y_i, Y_f):
             #print "i:", i,",j:", j
             pixelRGB = img.getpixel((i,j))
             R,G,B = pixelRGB
             br = np.sum([R,G,B])/ 3 ## 0 is dark (black) and 255 is bright (white)
+            c += 1
+            if c >= 1000:
+                if verbose:
+                    print "X:%d, Y:%d" % (i,j)
+                c = 0
             if RANK.has_key(br):
                 RANK[br] += 1
             else:
