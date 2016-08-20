@@ -28,12 +28,14 @@ def brightness(filename, quality=15, verbose=False):
     #coordinates of the pixel
     X_i,Y_i = 0,0
     (X_f, Y_f) = img.size
+    # a quarter should be enough
+    X_f = X_f / 4
+    Y_f = Y_f / 4
     #Get RGB
     time_i = time.time()
     c = 0
-    # a quarter should be enough
-    for i in xrange(X_i, X_f / 4):
-        for j in xrange(Y_i, Y_f / 4):
+    for i in xrange(X_i, X_f):
+        for j in xrange(Y_i, Y_f):
             #print "i:", i,",j:", j
             pixelRGB = img.getpixel((i,j))
             R,G,B = pixelRGB
