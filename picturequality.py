@@ -4,6 +4,8 @@
 import sys
 import os
 import Image
+import numpy as np
+import time
 
 def usage(msg):
     if msg:
@@ -27,17 +29,22 @@ def brightness(filename, quality=15, verbose=False):
     X_i,Y_i = 0,0
     (X_f, Y_f) = img.size
     #Get RGB
+    time_i = time.time()
     for i in xrange(X_i, X_f):
         for j in xrange(Y_i, Y_f):
             #print "i:", i,",j:", j
             pixelRGB = img.getpixel((i,j))
             R,G,B = pixelRGB
-            br = sum([R,G,B])/ 3 ## 0 is dark (black) and 255 is bright (white)
+            br = np.sum([R,G,B])/ 3 ## 0 is dark (black) and 255 is bright (white)
             if RANK.has_key(br):
                 RANK[br] += 1
             else:
                 RANK[br] = 1
-
+    if verbose:
+        print "Total time:", (time.time() - time_i)
+        time_i2 = time.time()
+        print "Histogram:", np.histogram(img)
+        print "Histogram time:", (time.time() - time_i)
     color_order = []
     pic_size = X_f * Y_f
     if verbose:

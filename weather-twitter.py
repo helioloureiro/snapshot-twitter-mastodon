@@ -46,8 +46,8 @@ WHITE = (255, 255, 255)
 DISCARDFRAMES = 10
 LOCKDIR = "/tmp"
 LOCKPREFIX = ".weather"
-FAILCOUNTER = 10 # amount ot attempts to get a picture
-RETRIES = 10 # try to start webcam
+FAILCOUNTER = 5 # amount ot attempts to get a picture
+WARMUP = 10 # try to start webcam
 THRESHOLD=15 # quality threshold
 DEBUG = True
 TIMEOUT =  10 * 60 # 10 minutes
@@ -101,11 +101,17 @@ def unlockpid():
         os.unlink(lockfile)
 
 def Far2Celsius(temp):
+    """
+    Simple temperature conversion for the right system (metric)
+    """
     temp = float(temp)
     celsius = (temp - 32) * 5 / 9
     return "%0.1f" % celsius
 
 def get_content():
+    """
+    Retrieve weather information
+    """
     global wth_key, wth_loc
 
     debug("Getting text content")
@@ -135,6 +141,9 @@ def get_content():
     return msg
 
 def getfailedimg():
+    """
+    Get an alternative image in case of failure
+    """
     if not os.path.exists(FAILDIR):
         debug("Directory not found: %s" % FAILDIR)
         return None
@@ -150,6 +159,9 @@ def getfailedimg():
     return failed_img
 
 def ReadConfig():
+    """
+    Configuration from file ~/.twitterc
+    """
     global cons_key, cons_sec, acc_key, acc_sec, wth_key, wth_loc
 
     cfg = ConfigParser.ConfigParser()
@@ -166,9 +178,11 @@ def ReadConfig():
     wth_loc = cfg.get("FORECAST.IO", "LOCATION")
 
 def GetPhoto(f = None, quality = None):
+    """
+    Photo aquisition
+    """
     global filename, FAILCOUNTER, error_tries
-    """
-    """
+
     debug("GetPhoto: failcounter=%d" % FAILCOUNTER)
     if FAILCOUNTER < 0:
         print "Fail counter reached maximum attempts.  Failed."
@@ -198,41 +212,19 @@ def GetPhoto(f = None, quality = None):
 
     debug("Camera start")
     cam.start()
-    if FAILCOUNTER % 2:
-        debug("Darker image...")
-        time.sleep(1*FAILCOUNTER/FAILCOUNTER)
-    else:
-        debug("Lighter image...")
-        time.sleep(FAILCOUNTER/(1 + FAILCOUNTER))
-    #time.sleep(3)
     debug("Getting image ritual")
-    counter = RETRIES
+    counter = WARMUP
     while counter:
-        if cam.query_image():
-            debug(" * camera ready")
-            break
-        debug(" * waiting for camera (%d)" % counter)
-        time.sleep(1)
+        cam.query_image()
+        debug(" * warming up (%d)" % counter)
+        time.sleep(0.5)
         counter -= 1
-    # idea from https://codeplasma.com/2012/12/03/getting-webcam-images-with-python-and-opencv-2-for-real-this-time/
-    # get a set of pictures to be discarded and adjust camera
-    debug(" * * RETRIES=%d" % RETRIES)
-    debug(" * * error_tries=%d" % error_tries)
-    debug(" * * FAILCOUNTER=%d" % FAILCOUNTER)
-    debug(" * calibrating white balance: ")
-    if (error_tries < 0):
-        error_tries = 0
-    for x in xrange(DISCARDFRAMES * ( error_tries - FAILCOUNTER + 1) ):
-        while not cam.query_image():
-            time.sleep(1)
-        image = cam.get_image()
-        msg = "." * x + "(%d)" % x
-        debug(msg)
+    cam.query_image()
+    debug(" * * dummy photo")
+    image = cam.get_image()
     debug(" * * getting image")
     debug("Smile!")
     image = cam.get_image()
-    #debug(" ")
-    #time.sleep(1)
     debug("Camera stop")
     cam.stop()
 
@@ -251,6 +243,10 @@ def GetPhoto(f = None, quality = None):
     debug("Quality response=%d" % resp)
     if resp:
         debug("Low quality detected.  Fails=%d" % FAILCOUNTER)
+        cameractl = "uvcdynctrl -s \"Exposure (Absolute)\" %d" % \
+            (int(resp))
+        debug(cameractl)
+        os.system(cameractl)
         FAILCOUNTER -= 1
         if FAILCOUNTER < 6:
             if (resp <= THRESHOLD):
