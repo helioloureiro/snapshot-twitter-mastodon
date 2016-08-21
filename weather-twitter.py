@@ -248,7 +248,7 @@ def GetPhoto(f = None, quality = None):
         debug(cameractl)
         os.system(cameractl)
         FAILCOUNTER -= 1
-        if FAILCOUNTER < 6:
+        if FAILCOUNTER < 1:
             if (resp <= THRESHOLD):
                 debug("Not best quality, but acceptable")
                 return 0
