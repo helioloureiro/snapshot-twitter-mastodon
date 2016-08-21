@@ -244,7 +244,7 @@ def GetPhoto(f = None, quality = None):
     if resp:
         debug("Low quality detected.  Fails=%d" % FAILCOUNTER)
         cameractl = "uvcdynctrl -s \"Exposure (Absolute)\" %d" % \
-            (int(resp))
+            (512 - 2 * int(resp))
         debug(cameractl)
         os.system(cameractl)
         FAILCOUNTER -= 1
