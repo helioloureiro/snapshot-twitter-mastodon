@@ -26,7 +26,6 @@ from picturequality import brightness
 import re
 from random import randint, random
 from shutil import copy
-from math import modf
 
 # stop annoying messages
 # src: http://stackoverflow.com/questions/11029717/how-do-i-disable-log-messages-from-the-requests-library
@@ -46,7 +45,7 @@ WHITE = (255, 255, 255)
 DISCARDFRAMES = 10
 LOCKDIR = "/tmp"
 LOCKPREFIX = ".weather"
-FAILCOUNTER = 5 # amount ot attempts to get a picture
+FAILCOUNTER = 8 # amount ot attempts to get a picture
 WARMUP = 10 # try to start webcam
 THRESHOLD=15 # quality threshold
 DEBUG = True
@@ -221,12 +220,14 @@ def GetPhoto(f = None, quality = None):
         counter -= 1
     cam.query_image()
     debug(" * * dummy photo")
+    time.sleep(5) # try to adjust first
     image = cam.get_image()
     debug(" * * getting image")
     debug("Smile!")
     image = cam.get_image()
     debug("Camera stop")
     cam.stop()
+    pygame.quit()
 
     if not os.path.exists(SAVEDIR):
         os.makedirs(SAVEDIR)
@@ -243,8 +244,14 @@ def GetPhoto(f = None, quality = None):
     debug("Quality response=%d" % resp)
     if resp:
         debug("Low quality detected.  Fails=%d" % FAILCOUNTER)
-        cameractl = "uvcdynctrl -s \"Exposure (Absolute)\" %d" % \
-            (512 - 2 * int(resp))
+        currentquality = os.popen("uvcdynctrl -g \"Exposure (Absolute)\"").read()
+        debug("Current image quality: %s" % currentquality)
+        currentquality = int(currentquality)
+        cameractl = "uvcdynctrl -s \"Exposure (Absolute)\" "
+        if (currentquality > 256):
+            cameractl += "%d" % 2 * int(resp)
+        else:
+            cameractl += "%d" % (512 - 2 * int(resp))
         debug(cameractl)
         os.system(cameractl)
         FAILCOUNTER -= 1
@@ -328,6 +335,7 @@ def WeatherScreenshot():
 
         # SHADOW
         step = 1
+        """
         for c in [ WHITE, BLACK ]:
             txt = Image.new('L', IMGSIZE)
             d = ImageDraw.Draw(txt)
@@ -340,6 +348,34 @@ def WeatherScreenshot():
             step = 0
             im.paste(ImageOps.colorize(w, c, c), (0,0), w)
             im.save(filename)
+        """
+        txt = Image.new('L', IMGSIZE)
+        d = ImageDraw.Draw(txt)
+        ## Title ##
+        # border first
+        d.text((10 + step + 1, 10 + step), msg[0], font=f_top, fill=WHITE)
+        d.text((10 + step - 1, 10 + step), msg[0], font=f_top, fill=WHITE)
+        d.text((10 + step, 10 + step + 1), msg[0], font=f_top, fill=WHITE)
+        d.text((10 + step, 10 + step - 1), msg[0], font=f_top, fill=WHITE)
+        # content
+        d.text((10 + step, 10 + step), msg[0], font=f_top, fill=BLACK)
+
+        ## Body ##
+        position = 80
+        for m in msg[1:]:
+            # border first
+            d.text( (10 + step + 1, position + step), m, font=f_body, fill=WHITE)
+            d.text( (10 + step - 1, position + step), m, font=f_body, fill=WHITE)
+            d.text( (10 + step, position + step + 1), m, font=f_body, fill=WHITE)
+            d.text( (10 + step, position + step - 1), m, font=f_body, fill=WHITE)
+            # content
+            d.text( (10 + step, position + step), m, font=f_body, fill=BLACK)
+            position += 20
+
+        # final touch
+        w = txt.rotate(0, expand=1)
+        im.paste(ImageOps.colorize(w, BLACK, BLACK), (0,0), w)
+        im.save(filename)
 
         # adding the credit to the right guys (awesome guys btw)
         msg = u"%s \nvia http://forecast.io/#/f/59.4029,17.9436" % "\n".join(msg)
