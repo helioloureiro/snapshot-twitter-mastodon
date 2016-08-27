@@ -119,6 +119,12 @@ def get_content():
     msg.append("Stockholm")
     msg.append(timestamp)
 
+    if sys.argv[-1] == "dry-run":
+        debug("Saving queries making an internal response")
+        msg.append(u"Temperature: %d°C" % randint(0,35) )
+        msg.append(u"Summary: super nice day ever!!!" )
+        return msg
+
     debug(" * requesting json about weather")
     url = "https://api.forecast.io/forecast/%s/%s" % (wth_key, wth_loc)
     req = requests.get(url)
@@ -249,9 +255,14 @@ def GetPhoto(f = None, quality = None):
         currentquality = int(currentquality)
         cameractl = "uvcdynctrl -s \"Exposure (Absolute)\" "
         if (currentquality > 256):
-            cameractl += "%d" % 2 * int(resp)
+            quality = 2 * int(resp)
+            if quality > 512:
+                quality = 512
         else:
-            cameractl += "%d" % (512 - 2 * int(resp))
+            quality = (512 - 2 * int(resp))
+            if quality < 0:
+                quality = 0
+        cameractl += "%d" % quality
         debug(cameractl)
         os.system(cameractl)
         FAILCOUNTER -= 1
@@ -284,6 +295,8 @@ def TheWalkingDead(walker=None):
 
 
 def WeatherScreenshot():
+    global filename
+
     debug("\n ### WeatherScreenshot [%s] ### " % time.ctime())
     debug("Threading image acquisition")
     th = threading.Thread(target=GetPhoto)
@@ -317,7 +330,6 @@ def WeatherScreenshot():
         msg = "Just another shot at %s" % \
             time.strftime("%H:%M", time.localtime())
     if msg:
-        msg_body = "\n".join(msg[1:])
         im = Image.open(filename)
         # just get truetype fonts on package ttf-mscorefonts-installer
         try:
@@ -333,9 +345,10 @@ def WeatherScreenshot():
             arialpath = "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"
             f_body = ImageFont.truetype(arialpath, size=20)
 
+        """
         # SHADOW
         step = 1
-        """
+
         for c in [ WHITE, BLACK ]:
             txt = Image.new('L', IMGSIZE)
             d = ImageDraw.Draw(txt)
@@ -349,27 +362,44 @@ def WeatherScreenshot():
             im.paste(ImageOps.colorize(w, c, c), (0,0), w)
             im.save(filename)
         """
+        step = 0
+        debug("Writting in WHITE")
         txt = Image.new('L', IMGSIZE)
         d = ImageDraw.Draw(txt)
+
         ## Title ##
         # border first
-        d.text((10 + step + 1, 10 + step), msg[0], font=f_top, fill=WHITE)
-        d.text((10 + step - 1, 10 + step), msg[0], font=f_top, fill=WHITE)
-        d.text((10 + step, 10 + step + 1), msg[0], font=f_top, fill=WHITE)
-        d.text((10 + step, 10 + step - 1), msg[0], font=f_top, fill=WHITE)
-        # content
-        d.text((10 + step, 10 + step), msg[0], font=f_top, fill=BLACK)
+        d.text((10 + step + 1, 10 + step), msg[0], font=f_top, fill=255)
+        d.text((10 + step - 1, 10 + step), msg[0], font=f_top, fill=255)
+        d.text((10 + step, 10 + step + 1), msg[0], font=f_top, fill=255)
+        d.text((10 + step, 10 + step - 1), msg[0], font=f_top, fill=255)
 
         ## Body ##
         position = 80
         for m in msg[1:]:
             # border first
-            d.text( (10 + step + 1, position + step), m, font=f_body, fill=WHITE)
-            d.text( (10 + step - 1, position + step), m, font=f_body, fill=WHITE)
-            d.text( (10 + step, position + step + 1), m, font=f_body, fill=WHITE)
-            d.text( (10 + step, position + step - 1), m, font=f_body, fill=WHITE)
+            d.text( (10 + step + 1, position + step), m, font=f_body, fill=255)
+            d.text( (10 + step - 1, position + step), m, font=f_body, fill=255)
+            d.text( (10 + step, position + step + 1), m, font=f_body, fill=255)
+            d.text( (10 + step, position + step - 1), m, font=f_body, fill=255)
             # content
-            d.text( (10 + step, position + step), m, font=f_body, fill=BLACK)
+            d.text( (10 + step, position + step), m, font=f_body, fill=255)
+            position += 20
+
+        # final touch
+        w = txt.rotate(0, expand=1)
+        im.paste(ImageOps.colorize(w, WHITE, WHITE), (0,0), w)
+        im.save(filename)
+
+        debug("Writting in BLACK")
+        txt = Image.new('L', IMGSIZE)
+        d = ImageDraw.Draw(txt)
+        # content
+        d.text((10 + step, 10 + step), msg[0], font=f_top, fill=255)
+        position = 80
+        for m in msg[1:]:
+            # content
+            d.text( (10 + step, position + step), m, font=f_body, fill=255)
             position += 20
 
         # final touch
@@ -396,8 +426,6 @@ def WeatherScreenshot():
             pass
     else:
         print "no message available"
-    #print "Removing media file %s" % filename
-    #os.unlink(filename)
 
 
 if __name__ == '__main__':
