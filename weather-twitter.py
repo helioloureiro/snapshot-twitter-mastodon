@@ -45,7 +45,7 @@ WHITE = (255, 255, 255)
 DISCARDFRAMES = 10
 LOCKDIR = "/tmp"
 LOCKPREFIX = ".weather"
-FAILCOUNTER = 8 # amount ot attempts to get a picture
+FAILCOUNTER = 10 # amount ot attempts to get a picture
 WARMUP = 10 # try to start webcam
 THRESHOLD=15 # quality threshold
 DEBUG = True
@@ -266,7 +266,7 @@ def GetPhoto(f = None, quality = None):
         debug(cameractl)
         os.system(cameractl)
         FAILCOUNTER -= 1
-        if FAILCOUNTER < 1:
+        if FAILCOUNTER <= 4:
             if (resp <= THRESHOLD):
                 debug("Not best quality, but acceptable")
                 return 0
