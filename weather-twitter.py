@@ -212,21 +212,36 @@ def GetPhoto(f = None, quality = None):
     if not device:
         print "Not webcam found.  Aborting..."
         sys.exit(1)
+    # Get some image stream to let camera focus
+    STARTUP = False
+    try:
+        # mencoder tv:// -tv driver=v4l2:width=1280:height=720:device=/dev/video1 -endpos 5 -ovc lavc -quiet -o /dev/null
+
+        i,o,e = os.popen3("mencoder " + \
+            "tv:// -tv driver=v4l2:width=%d" % IMGSIZE[0] + \
+            ":height=%d" % IMGSIZE[1] + \
+            ":device=%s " % device + \
+            "-endpos %d -ovc lavc -quiet -o /dev/null" % WARMUP)
+        x = o.read()
+        STARTUP = True
+
+    except OsError:
+        pass
     # you can get your camera resolution by command "uvcdynctrl -f"
     cam = pygame.camera.Camera(device, IMGSIZE)
 
     debug("Camera start")
     cam.start()
-    debug("Getting image ritual")
-    counter = WARMUP
-    while counter:
+    if not STARTUP:
+        debug("Getting image ritual")
+        counter = WARMUP
+        while counter:
+            cam.query_image()
+            debug(" * warming up (%d)" % counter)
+            time.sleep(0.5)
+            counter -= 1
         cam.query_image()
-        debug(" * warming up (%d)" % counter)
-        time.sleep(0.5)
-        counter -= 1
-    cam.query_image()
     debug(" * * dummy photo")
-    time.sleep(5) # try to adjust first
     image = cam.get_image()
     debug(" * * getting image")
     debug("Smile!")
@@ -246,25 +261,10 @@ def GetPhoto(f = None, quality = None):
     debug("Saving file %s" % filename)
     pygame.image.save(image, filename)
     debug("Checking quality.")
-    resp = brightness(filename, verbose=True)
+    resp = brightness(filename, verbose=False)
     debug("Quality response=%d" % resp)
     if resp:
         debug("Low quality detected.  Fails=%d" % FAILCOUNTER)
-        currentquality = os.popen("uvcdynctrl -g \"Exposure (Absolute)\"").read()
-        debug("Current image quality: %s" % currentquality)
-        currentquality = int(currentquality)
-        cameractl = "uvcdynctrl -s \"Exposure (Absolute)\" "
-        if (currentquality > 256):
-            quality = 2 * int(resp)
-            if quality > 512:
-                quality = 512
-        else:
-            quality = (512 - 2 * int(resp))
-            if quality < 0:
-                quality = 0
-        cameractl += "%d" % quality
-        debug(cameractl)
-        os.system(cameractl)
         FAILCOUNTER -= 1
         if FAILCOUNTER <= 4:
             if (resp <= THRESHOLD):
