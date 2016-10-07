@@ -248,8 +248,9 @@ def GetPhoto(f = None, quality = None):
     image = cam.get_image()
     counter = 1000
     while (counter):
-        print "Checking: %d" % counter
+        print "Checking: %d =" % counter,
         avg = sum(pygame.transform.average_color(image)) /3
+        print avg
         if (avg >= 30) and (avg <= 200):
             counter = 0
             break
