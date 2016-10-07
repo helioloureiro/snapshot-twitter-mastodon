@@ -246,6 +246,15 @@ def GetPhoto(f = None, quality = None):
     debug(" * * getting image")
     debug("Smile!")
     image = cam.get_image()
+    counter = 1000
+    while (counter):
+        print "Checking: %d" % counter
+        avg = sum(pygame.transform.average_color(image)) /3
+        if (avg >= 30) and (avg <= 200):
+            counter = 0
+            break
+        image = cam.get_image()
+        counter -= 1
     debug("Camera stop")
     cam.stop()
     pygame.quit()
@@ -260,9 +269,10 @@ def GetPhoto(f = None, quality = None):
         filename = f
     debug("Saving file %s" % filename)
     pygame.image.save(image, filename)
-    debug("Checking quality.")
-    resp = brightness(filename, verbose=False)
-    debug("Quality response=%d" % resp)
+    #debug("Checking quality.")
+    #resp = brightness(filename, verbose=False)
+    resp = None
+    #debug("Quality response=%d" % resp)
     if resp:
         debug("Low quality detected.  Fails=%d" % FAILCOUNTER)
         FAILCOUNTER -= 1
