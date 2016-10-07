@@ -126,7 +126,7 @@ def get_content():
         return msg
 
     debug(" * requesting json about weather")
-    url = "https://api.forecast.io/forecast/%s/%s" % (wth_key, wth_loc)
+    url = "https://api.darksky.net/forecast/%s/%s" % (wth_key, wth_loc)
     req = requests.get(url)
     jdata = json.loads(req.text)
 
