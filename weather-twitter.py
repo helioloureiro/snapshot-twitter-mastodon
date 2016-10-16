@@ -246,8 +246,9 @@ def GetPhoto(f = None, quality = None):
     debug(" * * getting image")
     debug("Smile!")
     image = cam.get_image()
-    counter = 1000
-    while (counter):
+    counter = 0
+    # try forever and, in failure, get killed by monitoring
+    while (True):
         print "Checking: %d =" % counter,
         avg = sum(pygame.transform.average_color(image)) /3
         print avg
@@ -255,7 +256,7 @@ def GetPhoto(f = None, quality = None):
             counter = 0
             break
         image = cam.get_image()
-        counter -= 1
+        counter += 1
     debug("Camera stop")
     cam.stop()
     pygame.quit()
