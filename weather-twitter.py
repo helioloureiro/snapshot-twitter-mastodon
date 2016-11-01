@@ -255,18 +255,22 @@ def GetPhoto(f = None, quality = None):
         if (avg >= 30) and (avg <= 200):
             counter = 0
             break
+        cam.query_image()
         image = cam.get_image()
         counter += 1
     debug("Camera stop")
     cam.stop()
     pygame.quit()
 
-    if not os.path.exists(SAVEDIR):
-        os.makedirs(SAVEDIR)
+    #if not os.path.exists(SAVEDIR):
+    #    os.makedirs(SAVEDIR)
+    year = time.strftime("%Y", time.localtime())
+    month = time.strftime("%m", time.localtime())
+    if not os.path.exists("%s/%s/%s" % (SAVEDIR, year, month)):
+        os.makedirs("%s/%s/%s" % (SAVEDIR, year, month) )
     if not f:
         timestamp = time.strftime("%Y-%m-%d_%H%M%S", time.localtime())
-        # year = time.strftime("%Y", time.localtime())
-        filename = "%s/%s.jpg" % (SAVEDIR, timestamp)
+        filename = "%s/%s/%s/%s.jpg" % (SAVEDIR, year, month, timestamp)
     else:
         filename = f
     debug("Saving file %s" % filename)
