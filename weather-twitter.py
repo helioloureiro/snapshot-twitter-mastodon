@@ -10,8 +10,7 @@ http://stackoverflow.com/questions/245447/how-do-i-draw-text-at-an-angle-using-p
 
 HOMEDIR = "/home/pi"
 
-import pygame
-import pygame.camera
+from picamera import PiCamera
 import time
 import sys
 import os
@@ -200,68 +199,11 @@ def GetPhoto(f = None, quality = None):
         FAILCOUNTER = 0
         return 0
     filename = None
-    debug("Pygame init")
-    pygame.init()
     debug("Camera init")
-    pygame.camera.init()
-    device = None
-    if os.path.exists("/dev/video1"):
-        device = "/dev/video1"
-    elif os.path.exists("/dev/video0"):
-        device = "/dev/video0"
-    if not device:
-        print "Not webcam found.  Aborting..."
-        sys.exit(1)
-    # Get some image stream to let camera focus
-    STARTUP = False
-    try:
-        # mencoder tv:// -tv driver=v4l2:width=1280:height=720:device=/dev/video1 -endpos 5 -ovc lavc -quiet -o /dev/null
-
-        i,o,e = os.popen3("mencoder " + \
-            "tv:// -tv driver=v4l2:width=%d" % IMGSIZE[0] + \
-            ":height=%d" % IMGSIZE[1] + \
-            ":device=%s " % device + \
-            "-endpos %d -ovc lavc -quiet -o /dev/null" % WARMUP)
-        x = o.read()
-        STARTUP = True
-
-    except OsError:
-        pass
-    # you can get your camera resolution by command "uvcdynctrl -f"
-    cam = pygame.camera.Camera(device, IMGSIZE)
-
+    camera = PiCamera()
     debug("Camera start")
-    cam.start()
-    if not STARTUP:
-        debug("Getting image ritual")
-        counter = WARMUP
-        while counter:
-            cam.query_image()
-            debug(" * warming up (%d)" % counter)
-            time.sleep(0.5)
-            counter -= 1
-        cam.query_image()
-    debug(" * * dummy photo")
-    image = cam.get_image()
-    debug(" * * getting image")
-    debug("Smile!")
-    image = cam.get_image()
-    counter = 0
-    # try forever and, in failure, get killed by monitoring
-    while (True):
-        print "Checking: %d =" % counter,
-        avg = sum(pygame.transform.average_color(image)) /3
-        print avg
-        if (avg >= 30) and (avg <= 200):
-            counter = 0
-            break
-        cam.query_image()
-        image = cam.get_image()
-        counter += 1
-    debug("Camera stop")
-    cam.stop()
-    pygame.quit()
-
+    camera.start_preview()
+    time.sleeeep(10)
     #if not os.path.exists(SAVEDIR):
     #    os.makedirs(SAVEDIR)
     year = time.strftime("%Y", time.localtime())
@@ -274,22 +216,8 @@ def GetPhoto(f = None, quality = None):
     else:
         filename = f
     debug("Saving file %s" % filename)
-    pygame.image.save(image, filename)
-    #debug("Checking quality.")
-    #resp = brightness(filename, verbose=False)
-    resp = None
-    #debug("Quality response=%d" % resp)
-    if resp:
-        debug("Low quality detected.  Fails=%d" % FAILCOUNTER)
-        FAILCOUNTER -= 1
-        if FAILCOUNTER <= 4:
-            if (resp <= THRESHOLD):
-                debug("Not best quality, but acceptable")
-                return 0
-        debug("Trying with lower threshold for quality")
-        # lower 20% of dark or ligth is ok
-        debug("Low quality detected.  Trying again.")
-        GetPhoto(filename)
+    camera.capture(filename)
+    camera.stop_preview()
 
 def TheWalkingDead(walker=None):
     """
