@@ -203,7 +203,7 @@ def GetPhoto(f = None, quality = None):
     camera = PiCamera()
     debug("Camera start")
     camera.start_preview()
-    time.sleeeep(10)
+    time.sleep(10)
     #if not os.path.exists(SAVEDIR):
     #    os.makedirs(SAVEDIR)
     year = time.strftime("%Y", time.localtime())
