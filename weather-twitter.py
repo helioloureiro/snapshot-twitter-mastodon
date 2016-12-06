@@ -277,10 +277,10 @@ def WeatherScreenshot():
         im = Image.open(filename)
         # just get truetype fonts on package ttf-mscorefonts-installer
         try:
-            f_top = ImageFont.truetype(font="Arial", size=60)
+            f_top = ImageFont.truetype(font="Impact", size=60)
         except TypeError:
             # older versions hasn't font and require full path
-            arialpath = "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"
+            arialpath = "/usr/share/fonts/truetype/msttcorefonts/Impact.ttf"
             f_top = ImageFont.truetype(arialpath, size=60)
         try:
             f_body = ImageFont.truetype(font="Arial", size=20)
