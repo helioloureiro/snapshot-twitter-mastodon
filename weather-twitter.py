@@ -1,4 +1,4 @@
-#! /usr/bin/python -u
+#! /usr/bin/python3 -u
 # -*- coding: utf-8 -*-
 
 """
@@ -10,12 +10,12 @@ http://stackoverflow.com/questions/245447/how-do-i-draw-text-at-an-angle-using-p
 
 HOMEDIR = "/home/pi"
 
-from picamera import PiCamera
 import time
 import sys
 import os
+# pip3 install python-twitter
 import twitter
-import ConfigParser
+import configparser
 import json
 import requests
 try:
@@ -30,9 +30,18 @@ import re
 from random import randint, random
 from shutil import copy
 
+raspcamera = False
+try:
+    from picamera import PiCamera
+except ModuleNotFoundError:
+    import pygame
+    import pygame.camera
+
+
+
 # stop annoying messages
 # src: http://stackoverflow.com/questions/11029717/how-do-i-disable-log-messages-from-the-requests-library
-requests.packages.urllib3.disable_warnings()
+#requests.packages.urllib3.disable_warnings()
 
 # test machine?
 if os.uname()[1] == 'elxaf7qtt32':
@@ -64,43 +73,8 @@ start_time = time.time()
 def debug(msg):
     if DEBUG:
         plock.acquire()
-        print msg
+        print(msg)
         plock.release()
-
-def lockpid():
-    """
-    Create a pid based lock file.
-    Return true to "locked" and false in case of failure (already in use).
-    """
-    directory = os.listdir(LOCKDIR)
-    lockedfile = None
-    for filename in directory:
-        if not re.search(LOCKPREFIX, filename): continue
-        lockedfile = filename
-    if lockedfile:
-        # double check
-        p = lockedfile.split(".")[-1]
-        pid = int(p)
-        try:
-            # SIGNAL 18 is SIGCONT
-            # it should be ignored
-            os.kill(pid, 18)
-            print "Process already running"
-            return False
-        except OSError:
-            debug("Dead file found (%s).  Removing." % lockedfile)
-            os.unlink("%s/%s" % (LOCKDIR, lockedfile))
-
-    fd = open(lockfile, 'w')
-    fd.write("%d\n" % mypid)
-    fd.flush()
-    fd.close()
-    return True
-
-def unlockpid():
-    if os.path.exists(lockfile):
-        debug("Removing lock")
-        os.unlink(lockfile)
 
 def Far2Celsius(temp):
     """
@@ -109,6 +83,89 @@ def Far2Celsius(temp):
     temp = float(temp)
     celsius = (temp - 32) * 5 / 9
     return "%0.1f" % celsius
+
+class CameraInterface:
+    def __init__(self, sleep_time=10):
+        self.waiting = sleep_time
+
+    def init(self):
+        if not raspcamera:
+            debug("Pygame init")
+            pygame.init()
+            pygame.camera.init()
+            device = None
+            for id in range(0,10,1):
+                if os.path.exists("/dev/video%d" % id):
+                    device = "/dev/video%d" % id
+                    break
+
+            if device is None:
+                raise("Camera device not found.")
+            # you can get your camera resolution by command "uvcdynctrl -f"
+            self.cam = pygame.camera.Camera(device, (1280, 720))
+        else:
+            debug("PiCamera init")
+            self.cam = PiCamera()
+
+    def get_image(self, destination):
+        self.image_file = destination
+        if not raspcamera:
+            self.cam.start()
+            time.sleep(10)
+            image = self.cam.get_image()
+            debug("CameraInterface.get_image(): saving image into %s" % \
+                self.image_file)
+            pygame.image.save(image, self.image_file)
+            self.cam.stop()
+
+        else:
+            self.cam.start_preview()
+            time.sleep(10)
+            camera.capture(self.image_file)
+            debug("CameraInterface.get_image(): saving image into %s" % \
+                self.image_file)
+            self.cam.stop_preview()
+
+class Unix:
+    def __init__(self): None
+
+    @staticmethod
+    def lockpid():
+        """
+        Create a pid based lock file.
+        Return true to "locked" and false in case of failure (already in use).
+        """
+        directory = os.listdir(LOCKDIR)
+        lockedfile = None
+        for filename in directory:
+            if not re.search(LOCKPREFIX, filename): continue
+            lockedfile = filename
+        if lockedfile:
+            # double check
+            p = lockedfile.split(".")[-1]
+            pid = int(p)
+            try:
+                # SIGNAL 18 is SIGCONT
+                # it should be ignored
+                os.kill(pid, 18)
+                print("Process already running")
+                return False
+            except OSError:
+                debug("Dead file found (%s).  Removing." % lockedfile)
+                os.unlink("%s/%s" % (LOCKDIR, lockedfile))
+
+        fd = open(lockfile, 'w')
+        fd.write("%d\n" % mypid)
+        fd.flush()
+        fd.close()
+        return True
+
+    @staticmethod
+    def unlockpid():
+        if os.path.exists(lockfile):
+            debug("Removing lock")
+            os.unlink(lockfile)
+
 
 def get_content():
     """
@@ -172,10 +229,10 @@ def ReadConfig():
     """
     global cons_key, cons_sec, acc_key, acc_sec, wth_key, wth_loc
 
-    cfg = ConfigParser.ConfigParser()
+    cfg = configparser.ConfigParser()
     debug("Reading configuration: %s" % configuration)
     if not os.path.exists(configuration):
-        print "Failed to find configuration file %s" % configuration
+        print("Failed to find configuration file %s" % configuration)
         sys.exit(1)
     cfg.read(configuration)
     cons_key = cfg.get("TWITTER", "CONS_KEY")
@@ -193,7 +250,7 @@ def GetPhoto(f = None, quality = None):
 
     debug("GetPhoto: failcounter=%d" % FAILCOUNTER)
     if FAILCOUNTER < 0:
-        print "Fail counter reached maximum attempts.  Failed."
+        print("Fail counter reached maximum attempts.  Failed.")
         debug("Trying to return a failed img.")
         filename = getfailedimg()
         if not filename:
@@ -203,11 +260,6 @@ def GetPhoto(f = None, quality = None):
         FAILCOUNTER = 0
         return 0
     filename = None
-    debug("Camera init")
-    camera = PiCamera()
-    debug("Camera start")
-    camera.start_preview()
-    time.sleep(10)
     #if not os.path.exists(SAVEDIR):
     #    os.makedirs(SAVEDIR)
     year = time.strftime("%Y", time.localtime())
@@ -220,8 +272,9 @@ def GetPhoto(f = None, quality = None):
     else:
         filename = f
     debug("Saving file %s" % filename)
-    camera.capture(filename)
-    camera.stop_preview()
+    cam = CameraInterface()
+    cam.init()
+    cam.get_image(filename)
 
 def TheWalkingDead(walker=None):
     """
@@ -272,7 +325,7 @@ def WeatherScreenshot():
     twd.join()
 
     if FAILCOUNTER < 0:
-        print "Failed to acquire image.  Quitting..."
+        print("Failed to acquire image.  Quitting...")
         sys.exit(1)
     if not msg:
         msg = "Just another shot at %s" % \
@@ -358,7 +411,7 @@ def WeatherScreenshot():
         # adding the credit to the right guys (awesome guys btw)
         msg = u"%s \nvia http://forecast.io/#/f/59.4029,17.9436" % "\n".join(msg)
         try:
-            print u"%s" % msg
+            print(u"%s" % msg)
         except UnicodeEncodeError:
             # I just hate this...
             pass
@@ -366,20 +419,20 @@ def WeatherScreenshot():
             debug("Just dry-run mode.  Done!")
             return
         try:
-            tw.PostMedia(status = msg,media = filename)
+            tw.PostUpdate(status = msg,media = filename)
             debug("done!")
-        except:
-            print "Failed for some reason..."
+        except Exception as e:
+            print("Failed for some reason:", e)
             # it failed so... deal w/ it.
             pass
     else:
-        print "no message available"
+        print("no message available")
 
 
 if __name__ == '__main__':
     try:
-        if lockpid():
+        if Unix.lockpid():
             WeatherScreenshot()
-            unlockpid()
+            Unix.unlockpid()
     except KeyboardInterrupt:
         sys.exit(0)
