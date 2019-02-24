@@ -89,7 +89,7 @@ class CameraInterface:
         self.waiting = sleep_time
 
     def init(self):
-        if not raspcamera:
+        if raspcamera is False:
             debug("Pygame init")
             pygame.init()
             pygame.camera.init()
@@ -109,7 +109,7 @@ class CameraInterface:
 
     def get_image(self, destination):
         self.image_file = destination
-        if not raspcamera:
+        if raspcamera is False:
             self.cam.start()
             time.sleep(10)
             image = self.cam.get_image()
