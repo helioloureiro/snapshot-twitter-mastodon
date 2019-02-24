@@ -18,8 +18,12 @@ import twitter
 import ConfigParser
 import json
 import requests
-import Image
-import ImageFont, ImageDraw, ImageOps
+try:
+    import Image
+    import ImageFont, ImageDraw, ImageOps
+except ImportError:
+    from PIL import Image
+    from PIL import ImageFont, ImageDraw, ImageOps
 import threading
 from picturequality import brightness
 import re
