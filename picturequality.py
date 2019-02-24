@@ -3,7 +3,10 @@
 
 import sys
 import os
-import Image
+try:
+    import Image
+except ImportError:
+    from PIL import Image
 import numpy as np
 import time
 
