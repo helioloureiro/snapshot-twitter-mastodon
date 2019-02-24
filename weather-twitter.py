@@ -33,6 +33,7 @@ from shutil import copy
 raspcamera = False
 try:
     from picamera import PiCamera
+    raspcamera = True
 except ModuleNotFoundError:
     import pygame
     import pygame.camera
