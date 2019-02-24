@@ -122,7 +122,7 @@ class CameraInterface:
         else:
             self.cam.start_preview()
             time.sleep(10)
-            camera.capture(self.image_file)
+            self.cam.capture(self.image_file)
             debug("CameraInterface.get_image(): saving image into %s" % \
                 self.image_file)
             self.cam.stop_preview()
