@@ -111,7 +111,8 @@ class CameraInterface:
 class Unix:
     def __init__(self): None
 
-    def lockpid(self):
+    @staticmethod
+    def lockpid():
         """
         Create a pid based lock file.
         Return true to "locked" and false in case of failure (already in use).
@@ -139,7 +140,8 @@ class Unix:
             fd.write(f"{PID}\n")
         return True
 
-    def unlockpid(self):
+    @staticmethod
+    def unlockpid():
         if os.path.exists(LOCKFILE):
             debug("Removing lock")
             os.unlink(LOCKFILE)
