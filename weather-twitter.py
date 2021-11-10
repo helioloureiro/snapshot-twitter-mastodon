@@ -242,8 +242,8 @@ class WeatherScreenshot(object):
         Otherwise fetch from forecast.io and save it.
         """
         getNewData = False
-        if isThereWeatherJson():
-            if isNotTooOldData(WEATHERJSONFILE):
+        if self.isThereWeatherJson():
+            if self.isNotTooOldData(WEATHERJSONFILE):
                 getNewData = False
             else:
                 getNewData = True
