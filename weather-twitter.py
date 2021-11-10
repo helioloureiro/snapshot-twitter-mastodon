@@ -295,7 +295,7 @@ class WeatherScreenshot(object):
 
         step = 0
         debug("Writting in WHITE")
-        text = Image.new('L', IMGSIZE)
+        txt = Image.new('L', IMGSIZE)
         d = ImageDraw.Draw(txt)
 
         ## Head ##
@@ -323,7 +323,7 @@ class WeatherScreenshot(object):
         image.save(imageFile)
 
         debug("Writting in BLACK")
-        text = Image.new('L', IMGSIZE)
+        txt = Image.new('L', IMGSIZE)
         d = ImageDraw.Draw(txt)
 
         # Head
