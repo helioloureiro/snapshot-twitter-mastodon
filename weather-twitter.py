@@ -152,8 +152,8 @@ class WeatherScreenshot(object):
         self.filename = None
         debug("\n ### WeatherScreenshot [%s] ### " % time.ctime())
         self.ReadConfig()
-        self.SetTimeStamp()
         self.SetTimeStampAndSaveFileName()
+        self.CreateDirectories(self.savefile)
 
     def ReadConfig(self):
         """
@@ -189,7 +189,6 @@ class WeatherScreenshot(object):
         """
         Photo aquisition
         """
-        self.CreateDirectories(self.savefile)
         debug(f"Saving file {self.savefile}")
         cam = LibCameraInterface()
         cam.get_image(filename)
