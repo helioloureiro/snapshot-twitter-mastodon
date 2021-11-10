@@ -30,13 +30,9 @@ import re
 from random import randint, random
 from shutil import copy
 
-raspcamera = False
-try:
-    from picamera import PiCamera
-    raspcamera = True
-except ModuleNotFoundError:
-    import pygame
-    import pygame.camera
+# pycamera is gone.  So lets rely on pygame.
+import pygame
+import pygame.camera
 
 
 
@@ -44,12 +40,10 @@ except ModuleNotFoundError:
 # src: http://stackoverflow.com/questions/11029717/how-do-i-disable-log-messages-from-the-requests-library
 #requests.packages.urllib3.disable_warnings()
 
-# test machine?
-if os.uname()[1] == 'elxaf7qtt32':
-    # my laptop
-    HOMEDIR = "/home/ehellou"
-
-configuration = "%s/.twitterc" % HOMEDIR
+DEVICE = "/dev/video0"
+IMGSIZE = (1280, 720)
+HOMEDIR =  os.environ.get("HOME")
+CONFIGURATION = f"{HOMEDIR}/.twitterc"
 SAVEDIR = "%s/weather" % HOMEDIR
 FAILDIR = "%s/images" % SAVEDIR
 IMGSIZE = (1280, 720)
@@ -60,12 +54,12 @@ LOCKDIR = "/tmp"
 LOCKPREFIX = ".weather"
 FAILCOUNTER = 10 # amount ot attempts to get a picture
 WARMUP = 10 # try to start webcam
-THRESHOLD=15 # quality threshold
+THRESHOLD = 15 # quality threshold
 DEBUG = True
 TIMEOUT =  10 * 60 # 10 minutes
 
-mypid = os.getpid()
-lockfile = "%s/%s.%d" % (LOCKDIR, LOCKPREFIX, mypid)
+PID = os.getpid()
+LOCKFILE = f"{LOCKDIR}/{LOCKPREFIX}.{PID}"
 plock = threading.Lock() # control print
 failed_img = "%s.failed_img.jpg" % sys.argv[0]
 error_tries = FAILCOUNTER
@@ -89,43 +83,19 @@ class CameraInterface:
     def __init__(self, sleep_time=10):
         self.waiting = sleep_time
 
-    def init(self):
-        if raspcamera is False:
-            debug("Pygame init")
-            pygame.init()
-            pygame.camera.init()
-            device = None
-            for id in range(0,10,1):
-                if os.path.exists("/dev/video%d" % id):
-                    device = "/dev/video%d" % id
-                    break
-
-            if device is None:
-                raise("Camera device not found.")
-            # you can get your camera resolution by command "uvcdynctrl -f"
-            self.cam = pygame.camera.Camera(device, (1280, 720))
-        else:
-            debug("PiCamera init")
-            self.cam = PiCamera()
+        debug("Pygame init")
+        pygame.init()
+        pygame.camera.init()
+        self.cam = pygame.camera.Camera(DEVICE, IMGSIZE)
 
     def get_image(self, destination):
         self.image_file = destination
-        if raspcamera is False:
-            self.cam.start()
-            time.sleep(10)
-            image = self.cam.get_image()
-            debug("CameraInterface.get_image(): saving image into %s" % \
-                self.image_file)
-            pygame.image.save(image, self.image_file)
-            self.cam.stop()
-
-        else:
-            self.cam.start_preview()
-            time.sleep(10)
-            self.cam.capture(self.image_file)
-            debug("CameraInterface.get_image(): saving image into %s" % \
-                self.image_file)
-            self.cam.stop_preview()
+        self.cam.start()
+        time.sleep(10)
+        image = self.cam.get_image()
+        debug(f"CameraInterface.get_image(): saving image into {self.image_file}")
+        pygame.image.save(image, self.image_file)
+        self.cam.stop()
 
 class Unix:
     def __init__(self): None
@@ -151,21 +121,19 @@ class Unix:
                 os.kill(pid, 18)
                 print("Process already running")
                 return False
-            except OSError:
-                debug("Dead file found (%s).  Removing." % lockedfile)
-                os.unlink("%s/%s" % (LOCKDIR, lockedfile))
+            except ProcessLookupError:
+                debug(f"Dead file found ({LOCKDIR}/{lockedfile}).  Removing.")
+                os.unlink(f"{LOCKDIR}/{lockedfile}")
 
-        fd = open(lockfile, 'w')
-        fd.write("%d\n" % mypid)
-        fd.flush()
-        fd.close()
+        with open(LOCKFILE, 'w') as fd:
+            fd.write(f"{PID}\n")
         return True
 
     @staticmethod
     def unlockpid():
-        if os.path.exists(lockfile):
+        if os.path.exists(LOCKFILE):
             debug("Removing lock")
-            os.unlink(lockfile)
+            os.unlink(LOCKFILE)
 
 
 def get_content():
@@ -231,11 +199,10 @@ def ReadConfig():
     global cons_key, cons_sec, acc_key, acc_sec, wth_key, wth_loc
 
     cfg = configparser.ConfigParser()
-    debug("Reading configuration: %s" % configuration)
-    if not os.path.exists(configuration):
-        print("Failed to find configuration file %s" % configuration)
-        sys.exit(1)
-    cfg.read(configuration)
+    debug(f"Reading configuration: {CONFIGURATION}")
+    if not os.path.exists(CONFIGURATION):
+        raise Exception(f"Failed to find configuration file {CONFIGURATION}")
+    cfg.read(CONFIGURATION)
     cons_key = cfg.get("TWITTER", "CONS_KEY")
     cons_sec = cfg.get("TWITTER", "CONS_SEC")
     acc_key = cfg.get("TWITTER", "ACC_KEY")
@@ -274,7 +241,6 @@ def GetPhoto(f = None, quality = None):
         filename = f
     debug("Saving file %s" % filename)
     cam = CameraInterface()
-    cam.init()
     cam.get_image(filename)
 
 def TheWalkingDead(walker=None):
@@ -285,15 +251,26 @@ def TheWalkingDead(walker=None):
     if not walker:
         return
     count = 0
-    while(walker.isAlive()):
+    if sys.version_info.major < 3:
+        raise Exception("Python version not supported.  Move to Python3.")
+
+    if sys.version_info.minor <= 8:
+        check = walker.isAlive
+    else:
+        check = walker.is_alive
+    while(check()):
         time.sleep(random())
         current_time = time.time()
         delta = current_time - start_time
-        #print "Thread(%s) counter=%d delta=%0.2f" % (walker, count, delta)
+        # print "Thread(%s) counter=%d delta=%0.2f" % (walker, count, delta)
         if delta > TIMEOUT:
             debug("Reached timeout.  Killing pid")
-            os.kill(mypid,9)
-        count += 1
+            try:
+                os.kill(PID, 9)
+            except ProcessLookupError:
+                # process is already killed
+                pass
+            count += 1
 
 
 def WeatherScreenshot():
