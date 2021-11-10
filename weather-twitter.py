@@ -20,7 +20,6 @@ import json
 import requests
 from PIL import Image
 from PIL import ImageFont, ImageDraw, ImageOps
-import threading
 from picturequality import brightness
 import re
 from random import randint, random
