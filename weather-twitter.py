@@ -155,7 +155,7 @@ class WeatherScreenshot(object):
         self.SetTimeStamp()
         self.SetTimeStampAndSaveFileName()
 
-    def ReadConfig():
+    def ReadConfig(self):
         """
         Configuration from file ~/.twitterc
         """
