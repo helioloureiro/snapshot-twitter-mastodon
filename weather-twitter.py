@@ -185,13 +185,13 @@ class WeatherScreenshot(object):
         if not os.path.exists(directories):
             os.makedirs(directories)
 
-    def GetPhoto(self, f = None, quality = None):
+    def GetPhoto(self):
         """
         Photo aquisition
         """
         debug(f"Saving file {self.savefile}")
         cam = LibCameraInterface()
-        cam.get_image(filename)
+        cam.get_image(self.savefile)
 
     def GetForecastFromWeb(self):
         """
