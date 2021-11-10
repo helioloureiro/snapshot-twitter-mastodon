@@ -18,12 +18,8 @@ import twitter
 import configparser
 import json
 import requests
-try:
-    import Image
-    import ImageFont, ImageDraw, ImageOps
-except ImportError:
-    from PIL import Image
-    from PIL import ImageFont, ImageDraw, ImageOps
+from PIL import Image
+from PIL import ImageFont, ImageDraw, ImageOps
 import threading
 from picturequality import brightness
 import re
@@ -93,9 +89,16 @@ class CameraInterface:
         self.cam.start()
         time.sleep(10)
         image = self.cam.get_image()
-        debug(f"CameraInterface.get_image(): saving image into {self.image_file}")
-        pygame.image.save(image, self.image_file)
         self.cam.stop()
+        debug(f"CameraInterface.get_image(): saving image into {self.image_file}")
+        #pygame.image.save(image, self.image_file)
+        # it should be simple as just save, but for some unknown reason pygame
+        # is crashing with the following message:
+        # NotImplementedError: saving images of extended format is not available
+        # so lets use PIL to generate the image instead.
+        raw = pygame.image.tostring(image, 'RGB')
+        raw_image = Image.frombytes('RGB', image.get_size(), raw)
+        raw_image.save(self.image_file)
 
 class Unix:
     def __init__(self): None
