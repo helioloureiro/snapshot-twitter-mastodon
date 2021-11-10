@@ -40,9 +40,8 @@ DEVICE = "/dev/video0"
 IMGSIZE = (1280, 720)
 HOMEDIR =  os.environ.get("HOME")
 CONFIGURATION = f"{HOMEDIR}/.twitterc"
-SAVEDIR = "%s/weather" % HOMEDIR
-FAILDIR = "%s/images" % SAVEDIR
-IMGSIZE = (1280, 720)
+SAVEDIR = f"{HOMEDIR}/weather"
+FAILDIR = f"{SAVEDIR}/images"
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 DISCARDFRAMES = 10
@@ -76,7 +75,7 @@ def Far2Celsius(temp):
     return "%0.1f" % celsius
 
 class CameraInterface:
-    def __init__(self, sleep_time=10):
+    def __init__(self, sleep_time=30):
         self.waiting = sleep_time
 
         debug("Pygame init")
@@ -87,7 +86,7 @@ class CameraInterface:
     def get_image(self, destination):
         self.image_file = destination
         self.cam.start()
-        time.sleep(10)
+        time.sleep(self.waiting)
         image = self.cam.get_image()
         self.cam.stop()
         debug(f"CameraInterface.get_image(): saving image into {self.image_file}")
