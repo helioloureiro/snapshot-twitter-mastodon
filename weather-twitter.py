@@ -318,7 +318,7 @@ class WeatherScreenshot(object):
             position += 20
 
         # final touch
-        w = text.rotate(0, expand=1)
+        w = txt.rotate(0, expand=1)
         image.paste(ImageOps.colorize(w, WHITE, WHITE), (0,0), w)
         image.save(imageFile)
 
