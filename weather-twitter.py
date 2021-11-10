@@ -338,8 +338,8 @@ class WeatherScreenshot(object):
 
         # final touch
         w = txt.rotate(0, expand=1)
-        im.paste(ImageOps.colorize(w, BLACK, BLACK), (0,0), w)
-        im.save(imageFile)
+        image.paste(ImageOps.colorize(w, BLACK, BLACK), (0,0), w)
+        image.save(imageFile)
 
     def SendTwitter(self):
         debug("Autenticating in Twitter")
