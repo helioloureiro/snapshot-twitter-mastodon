@@ -75,19 +75,18 @@ def Far2Celsius(temp):
     return "%0.1f" % celsius
 
 class LibCameraInterface:
-    import subprocess
     def __init__(self, sleep_time=30): None
 
     def get_image(self, destination):
+        import subprocess
         width, height = IMGSIZE
         command = f"/usr/bin/libcamera-jpeg --width={width} --height={height} -o {destination}"
         subprocess.call(command.split())
 
 class CameraInterface:
-    import pygame
-    import pygame.camera
-
     def __init__(self, sleep_time=30):
+        import pygame
+        import pygame.camera
         self.waiting = sleep_time
 
         debug("Pygame init")
