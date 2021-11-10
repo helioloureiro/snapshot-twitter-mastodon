@@ -55,7 +55,6 @@ TIMEOUT =  10 * 60 # 10 minutes
 
 PID = os.getpid()
 LOCKFILE = f"{LOCKDIR}/{LOCKPREFIX}.{PID}"
-plock = threading.Lock() # control print
 
 
 
@@ -63,9 +62,7 @@ start_time = time.time()
 
 def debug(msg):
     if DEBUG:
-        plock.acquire()
         print(msg)
-        plock.release()
 
 def Far2Celsius(temp):
     """
