@@ -352,7 +352,7 @@ class WeatherScreenshot(object):
             access_token_secret = self.credentials["twitter_acc_sec"]
             )
         debug("Retrieving info...")
-        imageText = GetWeatherForecast()
+        imageText = self.GetWeatherForecast()
 
         if imageText is None:
             imageText = [ f"Just another shot at {self.timestamp}" ]
