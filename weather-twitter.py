@@ -178,6 +178,7 @@ class WeatherScreenshot(object):
         year = time.strftime("%Y", time.localtime())
         month = time.strftime("%m", time.localtime())
         self.timestamp = time.strftime("%Y-%m-%d_%H%M%S", time.localtime())
+        self.prettyTimestamp = time.strftime("Date: %Y-%m-%d %H:%M", time.localtime())
         self.savefile = f"{SAVEDIR}/{year}/{month}/{self.timestamp}.jpg"
 
     def CreateDirectories(self, filename):
@@ -263,7 +264,7 @@ class WeatherScreenshot(object):
 
         msg = []
         msg.append("Stockholm")
-        msg.append(self.timestamp)
+        msg.append(self.prettyTimestamp)
         msg.append(u"Temperature: %s°C" % temp)
         msg.append("Summary: %s" %summary)
 
