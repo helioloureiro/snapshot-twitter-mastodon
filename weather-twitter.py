@@ -238,7 +238,7 @@ class WeatherScreenshot(object):
         if os.path.exists(WEATHERJSONFILE):
             os.unlink(WEATHERJSONFILE)
         with open(WEATHERJSONFILE, 'w') as output:
-            output.write(json.dumps(WEATHERJSONFILE, indent=4))
+            output.write(json.dumps(jData, indent=4))
 
     def LoadSavedForecastData(self):
         debug("WeatherScreenshot.LoadSavedForecastData()")
