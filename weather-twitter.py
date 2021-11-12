@@ -165,6 +165,7 @@ class WeatherScreenshot(object):
 
         args = parser.parse_args()
         self.dryRun = args.dryRun
+        debug(" * dry-run status:", self.dryRun)
 
 
     def ReadConfig(self):
@@ -402,6 +403,7 @@ class WeatherScreenshot(object):
             return
 
         try:
+            debug("Posting on Twitter")
             tw.PostUpdate(status = twitterText, media = self.savefile)
             debug("done!")
         except Exception as e:
