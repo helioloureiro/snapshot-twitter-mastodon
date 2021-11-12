@@ -226,9 +226,9 @@ class WeatherScreenshot(object):
         timeNow = time.time()
         deltaInHours = (timeNow - modificationTime)/(60*60)
         debug(" * delta time in hours:", deltaInHours)
-        if deltaInHours >= 3:
-            return True
-        return False
+        if deltaInHours >= 6:
+            return False
+        return True
 
     def SaveForecastData(self, jData):
         """
