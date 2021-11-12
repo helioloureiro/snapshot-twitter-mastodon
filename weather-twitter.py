@@ -226,7 +226,7 @@ class WeatherScreenshot(object):
         timeNow = time.time()
         deltaInHours = (timeNow - modificationTime)/(60*60)
         debug(" * delta time in hours:", deltaInHours)
-        if deltaInHours >= 6:
+        if deltaInHours >= 3:
             return False
         return True
 
