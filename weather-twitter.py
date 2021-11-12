@@ -160,7 +160,7 @@ class WeatherScreenshot(object):
         parser = argparse.ArgumentParser(description='Take a screenshot, get weather info and publish on Twitter.',
         formatter_class=argparse.MetavarTypeHelpFormatter)
         parser.add_argument('--dry-run', dest='dryRun',
-            default="false", type=bool,
+            default=False, type=bool,
             help='Run as dry-run or not.  If dry-run is set to \"true\", no message is sent on Twitter')
 
         args = parser.parse_args()
@@ -398,7 +398,7 @@ class WeatherScreenshot(object):
         imageText.append("via http://forecast.io/#/f/59.4029,17.9436")
         twitterText = "\n".join(imageText)
 
-        if self.dryRun == "true":
+        if self.dryRun:
             print("Stopping here because of dry-run mode.")
             return
 
