@@ -50,7 +50,6 @@ LOCKPREFIX = ".weather"
 FAILCOUNTER = 10 # amount ot attempts to get a picture
 WARMUP = 10 # try to start webcam
 THRESHOLD = 15 # quality threshold
-DEBUG = True
 TIMEOUT =  10 * 60 # 10 minutes
 
 PID = os.getpid()
@@ -60,9 +59,9 @@ LOCKFILE = f"{LOCKDIR}/{LOCKPREFIX}.{PID}"
 
 start_time = time.time()
 
-def debug(msg):
-    if DEBUG:
-        print(msg)
+def debug(*msg):
+    if os.environ.get("DEBUG"):
+        print(*msg)
 
 def Far2Celsius(temp):
     """
@@ -159,6 +158,7 @@ class WeatherScreenshot(object):
         """
         Configuration from file ~/.twitterc
         """
+        debug("WeatherScreenshot.ReadConfig()")
         cfg = configparser.ConfigParser()
         debug(f"Reading configuration: {CONFIGURATION}")
         if not os.path.exists(CONFIGURATION):
@@ -175,6 +175,7 @@ class WeatherScreenshot(object):
         }
 
     def SetTimeStampAndSaveFileName(self):
+        debug("WeatherScreenshot.SetTimeStampAndSaveFileName()")
         year = time.strftime("%Y", time.localtime())
         month = time.strftime("%m", time.localtime())
         self.timestamp = time.strftime("%Y-%m-%d_%H%M%S", time.localtime())
@@ -182,6 +183,7 @@ class WeatherScreenshot(object):
         self.savefile = f"{SAVEDIR}/{year}/{month}/{self.timestamp}.jpg"
 
     def CreateDirectories(self, filename):
+        debug("WeatherScreenshot.CreateDirectories()")
         directories = os.path.dirname(filename)
         if not os.path.exists(directories):
             os.makedirs(directories)
@@ -190,6 +192,7 @@ class WeatherScreenshot(object):
         """
         Photo aquisition
         """
+        debug("WeatherScreenshot.GetPhoto()")
         debug(f"Saving file {self.savefile}")
         cam = LibCameraInterface()
         cam.get_image(self.savefile)
@@ -198,6 +201,7 @@ class WeatherScreenshot(object):
         """
         Retrieve weather information from forcast.io.
         """
+        debug("WeatherScreenshot.GetForecastFromWeb()")
         forecast_io_key = self.credentials["forecast_io_key"]
         forecast_io_location = self.credentials["forecast_io_loc"]
 
@@ -209,16 +213,19 @@ class WeatherScreenshot(object):
         return jdata
 
     def isThereWeatherJson(self):
+        debug("WeatherScreenshot.isThereWeatherJson()")
         return os.path.exists(WEATHERJSONFILE)
 
     def isNotTooOldData(self, filename):
         """
         If file is older than 3 hours, it is considered outdated.
         """
+        debug("WeatherScreenshot.isNotTooOldData()")
         fileStats = os.stat(filename)
         modificationTime = fileStats.st_mtime
         timeNow = time.time()
         deltaInHours = (timeNow - modificationTime)/(60*60)
+        debug(" * delta time in hours:", deltaInHours)
         if deltaInHours >= 3:
             return True
         return False
@@ -227,12 +234,14 @@ class WeatherScreenshot(object):
         """
         Remove old file in order to create new file stats and save the data.
         """
+        debug("WeatherScreenshot.SaveForecastData()")
         if os.path.exists(WEATHERJSONFILE):
             os.unlink(WEATHERJSONFILE)
         with open(WEATHERJSONFILE, 'w') as output:
             output.write(json.dumps(WEATHERJSONFILE, indent=4))
 
     def LoadSavedForecastData(self):
+        debug("WeatherScreenshot.LoadSavedForecastData()")
         with open(WEATHERJSONFILE) as inputFile:
             jData = json.loads(inputFile.read())
         return jData
@@ -242,19 +251,27 @@ class WeatherScreenshot(object):
         Check if forecast json file exists and isn't older than 3 hours.
         Otherwise fetch from forecast.io and save it.
         """
+        debug("WeatherScreenshot.GetWeatherForecast()")
         getNewData = False
         if self.isThereWeatherJson():
+            debug(" * There is a json file")
             if self.isNotTooOldData(WEATHERJSONFILE):
+                debug(" * Data isn't too old - reuse")
                 getNewData = False
             else:
+                debug(" * Data is outdated - renew")
                 getNewData = True
+
         else:
+            debug(" * No json file found")
             getNewData = True
 
         if getNewData:
+            debug(" * Getting new data to renew")
             jData = self.GetForecastFromWeb()
             self.SaveForecastData(jData)
         else:
+            debug(" * Re-using already saved data")
             jData = self.LoadSavedForecastData()
 
         debug(" * converting from Farenheit to Celsius")
@@ -275,6 +292,7 @@ class WeatherScreenshot(object):
         """
         Just get truetype fonts on package ttf-mscorefonts-installer.
         """
+        debug("WeatherScreenshot.SetImageFont()")
         try:
             fontHead = ImageFont.truetype(font="Impact", size=60)
         except TypeError:
@@ -290,6 +308,7 @@ class WeatherScreenshot(object):
         return fontHead, fontBody
 
     def UpdateImageWithText(self, messageArray, imageFile):
+        debug("WeatherScreenshot.UpdateImageWithText()")
         image = Image.open(imageFile)
 
         fontHead, fontBody = self.SetImageFont()
@@ -343,7 +362,8 @@ class WeatherScreenshot(object):
         image.save(imageFile)
 
     def SendTwitter(self):
-        debug("Autenticating in Twitter")
+        debug("WeatherScreenshot.SendTwitter()")
+        debug(" * Autenticating in Twitter")
         # App python-tweeter
         # https://dev.twitter.com/apps/815176
         tw = twitter.Api(
@@ -352,7 +372,7 @@ class WeatherScreenshot(object):
             access_token_key = self.credentials["twitter_acc_key"],
             access_token_secret = self.credentials["twitter_acc_sec"]
             )
-        debug("Retrieving info...")
+        debug(" * Retrieving info...")
         imageText = self.GetWeatherForecast()
 
         if imageText is None:
