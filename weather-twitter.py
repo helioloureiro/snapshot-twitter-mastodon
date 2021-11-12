@@ -396,6 +396,11 @@ class WeatherScreenshot(object):
         # adding the credit to the right guys (awesome guys btw)
         imageText.append("via http://forecast.io/#/f/59.4029,17.9436")
         twitterText = "\n".join(imageText)
+
+        if self.dryRun == "true":
+            print("Stopping here because of dry-run mode.")
+            return
+
         try:
             tw.PostUpdate(status = twitterText, media = self.savefile)
             debug("done!")
