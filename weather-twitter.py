@@ -16,15 +16,13 @@ import os
 # pip3 install python-twitter
 import twitter
 import configparser
+import argparse
 import json
 import requests
 from PIL import Image
 from PIL import ImageFont, ImageDraw, ImageOps
 from picturequality import brightness
 import re
-from random import randint, random
-from shutil import copy
-
 # pycamera is gone.  So lets rely on pygame.
 # import pygame
 # import pygame.camera
@@ -75,6 +73,7 @@ class LibCameraInterface:
     def __init__(self, sleep_time=30): None
 
     def get_image(self, destination):
+        debug("LibCameraInterface.get_image()")
         import subprocess
         width, height = IMGSIZE
         command = f"/usr/bin/libcamera-jpeg --width={width} --height={height} -o {destination}"
@@ -92,6 +91,7 @@ class CameraInterface:
         self.cam = pygame.camera.Camera(DEVICE, IMGSIZE)
 
     def get_image(self, destination):
+        debug("CameraInterface.get_image()")
         self.image_file = destination
         self.cam.start()
         time.sleep(self.waiting)
@@ -153,6 +153,19 @@ class WeatherScreenshot(object):
         self.ReadConfig()
         self.SetTimeStampAndSaveFileName()
         self.CreateDirectories(self.savefile)
+        self.GetOptions()
+
+    def GetOptions(self):
+        debug("WeatherScreenshot.GetOptions()")
+        parser = argparse.ArgumentParser(description='Take a screenshot, get weather info and publish on Twitter.',
+        formatter_class=argparse.MetavarTypeHelpFormatter)
+        parser.add_argument('--dry-run', dest='dryRun',
+            default="false", type=bool,
+            help='Run as dry-run or not.  If dry-run is set to \"true\", no message is sent on Twitter')
+
+        args = parser.parse_args()
+        self.dryRun = args.dryRun
+
 
     def ReadConfig(self):
         """
