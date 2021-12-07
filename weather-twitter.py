@@ -89,7 +89,7 @@ class LibCameraInterface:
         darkLevel = darkness(destination)
         if darkLevel <= 10:
             ## Too dark, increase brightness
-            command = f"/usr/bin/libcamera-jpeg --width={width} --height={height}" + \
+            command = f"/usr/bin/libcamera-jpeg --width={width} --height={height} " + \
                 f"--brightness=0.5 -o {destination}"
             subprocess.call(command.split())
 
