@@ -94,7 +94,7 @@ class LibCameraInterface:
             ## Too dark, increase brightness
             print("Detected too dark - trying to fix brightness")
             command = f"/usr/bin/libcamera-jpeg --width={width} --height={height} " + \
-                f"--brightness=0.75 -o {destination}"
+                f"--shuter=0.01 --ev=-2 --timeout=10000 -o {destination}"
             subprocess.call(command.split())
 
 
