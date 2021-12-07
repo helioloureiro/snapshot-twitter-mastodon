@@ -73,7 +73,7 @@ def Far2Celsius(temp):
     celsius = (temp - 32) * 5 / 9
     return "%0.1f" % celsius
 
-def darkness(imageFile : str): -> float
+def darkness(imageFile : str) -> float:
     # anything below 10 is too dark
     return np.mean(imageio.imread(imageFile, as_gray=True))
 
