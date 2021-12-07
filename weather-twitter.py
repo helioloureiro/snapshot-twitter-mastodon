@@ -27,6 +27,10 @@ import re
 # import pygame
 # import pygame.camera
 
+## Trying to fix images too dark
+import numpy as np
+import imageio
+
 
 
 # stop annoying messages
@@ -69,6 +73,10 @@ def Far2Celsius(temp):
     celsius = (temp - 32) * 5 / 9
     return "%0.1f" % celsius
 
+def darkness(imageFile : str): -> float
+    # anything below 10 is too dark
+    return np.mean(imageio.imread(imageFile, as_gray=True))
+
 class LibCameraInterface:
     def __init__(self, sleep_time=30): None
 
@@ -78,6 +86,13 @@ class LibCameraInterface:
         width, height = IMGSIZE
         command = f"/usr/bin/libcamera-jpeg --width={width} --height={height} -o {destination}"
         subprocess.call(command.split())
+        darkLevel = darkness(destination)
+        if darkLevel <= 10:
+            ## Too dark, increase brightness
+            command = f"/usr/bin/libcamera-jpeg --width={width} --height={height}" + \
+                f"--brightness=0.5 -o {destination}"
+            subprocess.call(command.split())
+
 
 class CameraInterface:
     def __init__(self, sleep_time=30):
