@@ -148,7 +148,11 @@ class Unix:
                 # SIGNAL 18 is SIGCONT
                 # it should be ignored
                 os.kill(pid, 18)
-                print("Process already running")
+                print(f"Process {pid} already running... killing it")
+                os.kill(pid, 9)
+                time.sleep(1)
+                os.kill(pid, 18)
+                print(f"Failed to kill the process {pid}.  Aborting.")
                 return False
             except ProcessLookupError:
                 debug(f"Dead file found ({LOCKDIR}/{lockedfile}).  Removing.")
