@@ -31,7 +31,8 @@ import re
 import numpy as np
 import imageio
 
-
+# running toot from shell
+import subprocess
 
 # stop annoying messages
 # src: http://stackoverflow.com/questions/11029717/how-do-i-disable-log-messages-from-the-requests-library
@@ -57,9 +58,16 @@ TIMEOUT =  10 * 60 # 10 minutes
 PID = os.getpid()
 LOCKFILE = f"{LOCKDIR}/{LOCKPREFIX}.{PID}"
 
+# load pip binaries like toot in the PATH
+PATH = os.getenv('PATH')
+PATH += ':' + os.getenv('HOME') + '.local/bin'
+os.setenv('PATH', PATH)
 
 
 start_time = time.time()
+
+def runShell(command):
+    return subprocess.check_output(command.split())
 
 def debug(*msg):
     if os.environ.get("DEBUG"):
@@ -428,6 +436,10 @@ class WeatherScreenshot(object):
         try:
             debug("Posting on Twitter")
             tw.PostUpdate(status = twitterText, media = self.savefile)
+            debug("done!")
+
+            debug("Posting on Mastodon")
+            runShell(f"toot post \"{twitterText}\" --media={self.savfile}")
             debug("done!")
         except Exception as e:
             print("Failed for some reason:", e)
