@@ -439,7 +439,7 @@ class WeatherScreenshot(object):
             debug("done!")
 
             debug("Posting on Mastodon")
-            runShell(["toot",  "post",  f"\"{twitterText}\"",  f"--media={self.savefile}"])
+            runShell(["toot",  "post",  f"{twitterText}",  f"--media={self.savefile}"])
             debug("done!")
         except Exception as e:
             print("Failed for some reason:", e)
