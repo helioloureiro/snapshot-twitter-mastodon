@@ -61,7 +61,7 @@ LOCKFILE = f"{LOCKDIR}/{LOCKPREFIX}.{PID}"
 # load pip binaries like toot in the PATH
 PATH = os.getenv('PATH')
 PATH += ':' + os.getenv('HOME') + '.local/bin'
-os.setenv('PATH', PATH)
+os.putenv('PATH', PATH)
 
 
 start_time = time.time()
