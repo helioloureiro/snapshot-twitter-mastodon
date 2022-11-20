@@ -1,4 +1,4 @@
-#! /usr/bin/python -u
+#! /usr/bin/python3 -u
 # -*- coding: utf-8 -*-
 
 """
@@ -17,16 +17,17 @@ import twitter
 import ConfigParser
 import datetime
 
-
 # test machine?
 if os.uname()[1] == 'elxaf7qtt32':
     # my laptop
     HOMEDIR = "/home/ehellou"
+else:
+    HOMEDIR=os.getenv('HOME')
 
 
-configuration = "%s/.twitterc" % HOMEDIR
-agenda = "%s/pyconse.agenda" % HOMEDIR
-SAVEDIR = "%s/pyconse" % HOMEDIR
+configuration = f"{HOMEDIR}/.twitterc"
+agenda = f"{HOMEDIR}/pyconse.agenda"
+SAVEDIR = f"{HOMEDIR}/pyconse"
 
 def get_content():
     if not os.path.exists(agenda):
@@ -38,7 +39,7 @@ def get_content():
     DD = int(time.strftime("%d", time.localtime()))
     now = datetime.datetime.now()
     for line in fd.readlines():
-        print line
+        print(line)
         if not line[0] == '2':
             continue
         try:
@@ -47,7 +48,7 @@ def get_content():
             continue
         # not same day?  move forward
         if tmstp_date != timestamp:
-            print "No date"
+            print("No date")
             continue
 
         tmstp_begin, tmstp_end = tmstp_timeslot.split("-")
@@ -57,54 +58,54 @@ def get_content():
 
         # before time?
         if delta.days < 0:
-            print "It didn't start yet."
+            print("It didn't start yet.")
             continue
 
         h_end, m_end = tmstp_end.split(":")
         end = datetime.datetime(YYYY, MM, DD, int(h_end), int(m_end))
         delta = end - now
         if delta.days < 0:
-            print "It already finished"
+            print("It already finished")
             continue
 
         tmstp_info = tmstp_info.rstrip()
         if tmstp_info == "EMPTY":
-            print "Got empty"
+            print("Got empty")
             return None
-        print "Got here, so sending back \"%s\"" % tmstp_info
+        print(f"Got here, so sending back \"{tmstp_info}\"" )
         return tmstp_info
 
 def TweetPhoto():
     """
     """
-    print "Pygame init"
+    print("Pygame init")
     pygame.init()
-    print "Camera init"
+    print("Camera init")
     pygame.camera.init()
     # you can get your camera resolution by command "uvcdynctrl -f"
     cam = pygame.camera.Camera("/dev/video1", (1280, 720))
 
-    print "Camera start"
+    print("Camera start")
     cam.start()
     time.sleep(1)
-    print "Getting image"
+    print("Getting image")
     image = cam.get_image()
     time.sleep(1)
-    print "Camera stop"
+    print("Camera stop")
     cam.stop()
 
     if not os.path.exists(SAVEDIR):
         os.makedirs(SAVEDIR)
     timestamp = time.strftime("%Y-%m-%d_%H%M%S", time.localtime())
     year = time.strftime("%Y", time.localtime())
-    filename = "%s/%s.jpg" % (SAVEDIR, timestamp)
-    print "Saving file %s" % filename
+    filename = f"{SAVEDIR}/{timestamp}.jpg"
+    print(f"Saving file {filename}")
     pygame.image.save(image, filename)
 
     cfg = ConfigParser.ConfigParser()
-    print "Reading configuration: %s" % configuration
+    print(f"Reading configuration: {configuration}")
     if not os.path.exists(configuration):
-        print "Failed to find configuration file %s" % configuration
+        print("Failed to find configuration file {configuration}")
         sys.exit(1)
     cfg.read(configuration)
     cons_key = cfg.get("TWITTER", "CONS_KEY")
@@ -112,7 +113,7 @@ def TweetPhoto():
     acc_key = cfg.get("TWITTER", "ACC_KEY")
     acc_sec = cfg.get("TWITTER", "ACC_SEC")
 
-    print "Autenticating in Twitter"
+    print("Autenticating in Twitter")
     # App python-tweeter
     # https://dev.twitter.com/apps/815176
     tw = twitter.Api(
@@ -121,21 +122,22 @@ def TweetPhoto():
         access_token_key = acc_key,
         access_token_secret = acc_sec
         )
-    print "Posting...",
+    print("Posting...")
     msg = get_content()
     if not msg:
-        msg = "Just another shot at %s" % \
-            time.strftime("%H:%M", time.localtime())
+        now = time.strftime("%H:%M", time.localtime())
+        msg = (f"Just another shot at {now}")
+            
     if msg:
-        msg = "%s #pyconse" % msg
-        print msg
+        msg = f"{msg} #pyconse"
+        print(msg)
         try:
             tw.PostMedia(status = msg,media = filename)
-            print "done!"
+            print("done!")
         except:
             None
     else:
-        print "no message available"
+        print("no message available")
     #print "Removing media file %s" % filename
     #os.unlink(filename)
 
