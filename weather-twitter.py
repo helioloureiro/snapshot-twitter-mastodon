@@ -58,12 +58,6 @@ TIMEOUT =  10 * 60 # 10 minutes
 PID = os.getpid()
 LOCKFILE = f"{LOCKDIR}/{LOCKPREFIX}.{PID}"
 
-# load pip binaries like toot in the PATH
-PATH = os.getenv('PATH')
-PATH += ':' + os.getenv('HOME') + '.local/bin'
-os.putenv('PATH', PATH)
-
-
 start_time = time.time()
 
 def runShell(*command):
@@ -439,7 +433,7 @@ class WeatherScreenshot(object):
             debug("done!")
 
             debug("Posting on Mastodon")
-            runShell(["toot",  "post",  f"{twitterText}",  f"--media={self.savefile}"])
+            runShell([f"{HOMEDIR}/.local/bin/toot",  "post",  f"{twitterText}",  f"--media={self.savefile}"])
             debug("done!")
         except Exception as e:
             print("Failed for some reason:", e)
