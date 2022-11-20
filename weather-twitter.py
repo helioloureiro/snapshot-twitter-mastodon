@@ -66,8 +66,8 @@ os.putenv('PATH', PATH)
 
 start_time = time.time()
 
-def runShell(command):
-    return subprocess.check_output(command.split())
+def runShell(*command):
+    return subprocess.check_output(*command)
 
 def debug(*msg):
     if os.environ.get("DEBUG"):
@@ -439,7 +439,7 @@ class WeatherScreenshot(object):
             debug("done!")
 
             debug("Posting on Mastodon")
-            runShell(f"toot post \"{twitterText}\" --media={self.savefile}")
+            runShell(["toot",  "post",  f"\"{twitterText}\"",  f"--media={self.savefile}"])
             debug("done!")
         except Exception as e:
             print("Failed for some reason:", e)
