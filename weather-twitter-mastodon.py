@@ -1,4 +1,4 @@
-#! /usr/bin/python3 -u
+#! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -189,9 +189,9 @@ class WeatherScreenshot(object):
     def __init__(self, mastodonUsername=None, twitterFlag=False, dryRunFlag=False):
         self.filename = None
         debug("\n ### WeatherScreenshot [%s] ### " % time.ctime())
-        if twitterFlag and dryRunFlag:
+        if twitterFlag and not dryRunFlag:
             self.ReadConfig()
-        if mastodonUsername and dryRunFlag:
+        if mastodonUsername and not dryRunFlag:
             self.MastodonAuthenticate(mastodonUsername)
         self.SetTimeStampAndSaveFileName()
         self.CreateDirectories(self.savefile)
