@@ -481,9 +481,16 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='It takes a snapshot from camera, gets current weather forecast and publishes onlne')
     parser.add_argument("--mastodonuser", help="Your registered mastodon account at toot configuration")
     parser.add_argument("--twitter", action='store_true', help="To send the post to Twitter")
-    parser.add_argument('--dryrun', action='store_false',
+    parser.add_argument('--dryrun', action='store_true', default=False,
             help='Run as dry-run or not.  If dry-run is set to \"true\", no message is sent on Twitter and/or Mastodon')
     args = parser.parse_args()
+
+    if args.dryrun:
+        print('Dry-Run mode enabled')
+
+    if not args.mastodonuser and not args.twitter:
+        parser.print_help()
+        sys.exit(os.EX_USAGE)
 
     if args.mastodonuser and not os.path.exists(TOOTCONFIG):
         print("ERROR: toot not configured yet.  Use toot to create your configuration.")
