@@ -60,6 +60,8 @@ THRESHOLD = 15 # quality threshold
 TIMEOUT =  10 * 60 # 10 minutes
 TOOTCONFIG = f"{HOMEDIR}/.config/toot/config.json"
 
+
+
 PID = os.getpid()
 LOCKFILE = f"{LOCKDIR}/{LOCKPREFIX}.{PID}"
 
