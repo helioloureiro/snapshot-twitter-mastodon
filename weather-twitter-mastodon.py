@@ -189,9 +189,9 @@ class WeatherScreenshot(object):
     def __init__(self, mastodonUsername=None, twitterFlag=False, dryRunFlag=False):
         self.filename = None
         debug("\n ### WeatherScreenshot [%s] ### " % time.ctime())
-        if twitterFlag and not dryRunFlag:
+        if twitterFlag == True and dryRunFlag == False:
             self.ReadConfig()
-        if mastodonUsername and not dryRunFlag:
+        if mastodonUsername and dryRunFlag == False:
             self.MastodonAuthenticate(mastodonUsername)
         self.SetTimeStampAndSaveFileName()
         self.CreateDirectories(self.savefile)
