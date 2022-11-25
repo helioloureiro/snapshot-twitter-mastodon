@@ -186,12 +186,12 @@ class Unix:
 
 
 class WeatherScreenshot(object):
-    def __init__(self, mastodonUsername=None, twitterFlag=False, dryRunFlag=False):
+    def __init__(self, mastodonUsername="", twitterFlag=False, dryRunFlag=False):
         self.filename = None
         debug("\n ### WeatherScreenshot [%s] ### " % time.ctime())
         if twitterFlag == True and dryRunFlag == False:
             self.ReadConfig()
-        if mastodonUsername and dryRunFlag == False:
+        if len(mastodonUsername) > 0 and dryRunFlag == False:
             self.MastodonAuthenticate(mastodonUsername)
         self.SetTimeStampAndSaveFileName()
         self.CreateDirectories(self.savefile)
@@ -500,10 +500,14 @@ if __name__ == '__main__':
         if Unix.lockpid():
             shot = WeatherScreenshot(args.mastodonuser, args.twitter, args.dryrun)
             shot.GetPhoto()
-            if args.twitter:
+            if args.twitter == True:
                 shot.SendTwitter()
-            if args.mastodonuser:
+            else:
+                print('Skipped SendTwitter since flag is False')
+            if args.mastodonuser is not None and len(args.mastodonuser) > 0:
                 shot.SendMastodon()
+            else:
+                print('Skipped SendMastodon since or username is missing or its length is zero')
             Unix.unlockpid()
     except KeyboardInterrupt:
         sys.exit(0)
