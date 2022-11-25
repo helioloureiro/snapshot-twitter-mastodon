@@ -60,8 +60,6 @@ THRESHOLD = 15 # quality threshold
 TIMEOUT =  10 * 60 # 10 minutes
 TOOTCONFIG = f"{HOMEDIR}/.config/toot/config.json"
 
-
-
 PID = os.getpid()
 LOCKFILE = f"{LOCKDIR}/{LOCKPREFIX}.{PID}"
 
@@ -97,8 +95,8 @@ class LibCameraInterface:
         width, height = IMGSIZE
         command =  [ 
             "/usr/bin/libcamera-jpeg", 
-            "--width=" + width, 
-            "--height=" + height,
+            "--width=" + str(width), 
+            "--height=" + str(height),
             "-o",
              destination 
         ]
@@ -109,8 +107,8 @@ class LibCameraInterface:
             print("Detected too dark - trying to fix brightness")
             command = [
                 "/usr/bin/libcamera-jpeg",
-                "--width=" + width,
-                "--height=" + height,
+                "--width=" + str(width),
+                "--height=" + str(height),
                 "--shutter=0.01",
                 "--ev=-2",
                 "--timeout=10000",
@@ -481,27 +479,23 @@ class WeatherScreenshot(object):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='It takes a snapshot from camera, gets current weather forecast and publishes onlne')
-    parser.add_argument("--userid", help="Your registered mastodon account at toot configuration")
+    parser.add_argument("--mastodonuser", help="Your registered mastodon account at toot configuration")
     parser.add_argument("--twitter", action='store_true', help="To send the post to Twitter")
-    parser.add_argument('--dryrun', default=False, type=bool,
+    parser.add_argument('--dryrun', action='store_false',
             help='Run as dry-run or not.  If dry-run is set to \"true\", no message is sent on Twitter and/or Mastodon')
     args = parser.parse_args()
 
-    if args.userid is None:
-        parser.print_usage()
-        sys.exit(os.EX_NOINPUT)
-
-    if not os.path.exists(TOOTCONFIG):
+    if args.mastodonuser and not os.path.exists(TOOTCONFIG):
         print("ERROR: toot not configured yet.  Use toot to create your configuration.")
         sys.exit(os.EX_CONFIG)
 
     try:
         if Unix.lockpid():
-            shot = WeatherScreenshot(args.userid, args.twitter, args.dryrun)
+            shot = WeatherScreenshot(args.mastodonuser, args.twitter, args.dryrun)
             shot.GetPhoto()
             if args.twitter:
                 shot.SendTwitter()
-            if args.userid:
+            if args.mastodonuser:
                 shot.SendMastodon()
             Unix.unlockpid()
     except KeyboardInterrupt:
