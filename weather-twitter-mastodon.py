@@ -58,7 +58,7 @@ FAILCOUNTER = 10 # amount ot attempts to get a picture
 WARMUP = 10 # try to start webcam
 THRESHOLD = 15 # quality threshold
 TIMEOUT =  10 * 60 # 10 minutes
-TOOTCONFIG = f"{HOME}/.config/toot/config.json"
+TOOTCONFIG = f"{HOMEDIR}/.config/toot/config.json"
 
 PID = os.getpid()
 LOCKFILE = f"{LOCKDIR}/{LOCKPREFIX}.{PID}"
