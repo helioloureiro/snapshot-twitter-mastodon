@@ -303,7 +303,7 @@ class WeatherScreenshot(object):
 
     def isNotTooOldData(self, filename):
         """
-        If file is older than 3 hours, it is considered outdated.
+        If file is older than 1 hour, it is considered outdated.
         """
         debug("WeatherScreenshot.isNotTooOldData()")
         fileStats = os.stat(filename)
@@ -311,7 +311,7 @@ class WeatherScreenshot(object):
         timeNow = time.time()
         deltaInHours = (timeNow - modificationTime)/(60*60)
         debug(" * delta time in hours:", deltaInHours)
-        if deltaInHours >= 3:
+        if deltaInHours >= 1:
             return False
         return True
 
