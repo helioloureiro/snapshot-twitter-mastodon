@@ -35,6 +35,8 @@ import imageio
 from mastodon import Mastodon
 import json
 
+from enum import Enum
+
 
 # stop annoying messages
 # src: http://stackoverflow.com/questions/11029717/how-do-i-disable-log-messages-from-the-requests-library
@@ -117,6 +119,9 @@ def darkness(imageFile : str) -> float:
     # anything below 10 is too dark
     return np.mean(imageio.imread(imageFile, as_gray=True))
 
+class Weather(Enum):
+    DARKSKY = 1
+    OPENMETEO = 2
 
 class LibCameraInterface:
     def __init__(self, sleep_time=30): None
@@ -215,18 +220,106 @@ class Unix:
             debug("Removing lock")
             os.unlink(LOCKFILE)
 
+class WeatherForecast:
+    '''
+    The json structed spects a few fields.  So even getting different source
+    instead darksky.net, we can set the data in same structure.
+
+    jData = {
+        "currenctly" : {
+            "summary" : "clear|raining|etc",
+            "temperature" : "in Farenheit for darksky, Celsius for others"
+        }
+    }
+    '''
+    def __init__(self, source=Weather.DARKSKY, forecastIOKey=None, forecastIOLocation=None):
+        self.source = source
+        if source == Weather.DARKSKY:
+            self.url = f"https://api.darksky.net/forecast/{forecastIOKey}/{forecastIOLocation}"
+        elif source == Weather.OPENMETEO:
+            self.url = "https://api.open-meteo.com/v1/metno?latitude=59.33&longitude=18.07&current_weather=true"
+        else:
+            raise Exception("Unknow weather forecast source.")
+
+        if self.isThereWeatherJson(WEATHERJSONFILE) and self.isNotTooOldData(WEATHERJSONFILE):
+            self.jdata = self.LoadSavedForecastData(WEATHERJSONFILE)
+        else:
+            self.jdata = self.fetchForecastJson()
+            self.SaveForecastData(self.jdata, WEATHERJSONFILE)
+    def GetSource(self):
+        return self.source
+
+    def GetTemperature(self):
+        if self.GetSource() == Weather.DARKSKY:
+            temperature = self.jdata["currently"]["temperature"]
+            return Far2Celsius(temperature)
+        # to be fixed later
+        return self.jdata["currently"]["temperature"]
+
+    def GetSummary(self):
+        if self.GetSource() == Weather.DARKSKY:
+             return self.jdata["currently"]["summary"]
+        # to be fixed later
+        return self.jdata["currently"]["summary"]
+
+    def fetchForecastJson(self):
+        """
+        Retrieve weather information.
+        """
+        debug("WeatherScreenshot.GetForecastFromWeb()")
+        req = requests.get(self.url)
+        jdata = json.loads(req.text)
+
+        return jdata
+
+    def isThereWeatherJson(self, filename):
+        debug("WeatherScreenshot.isThereWeatherJson()")
+        return os.path.exists(filename)
+
+    def isNotTooOldData(self, filename):
+        """
+        If file is older than 1 hour, it is considered outdated.
+        """
+        debug("WeatherScreenshot.isNotTooOldData()")
+        fileStats = os.stat(filename)
+        modificationTime = fileStats.st_mtime
+        timeNow = time.time()
+        deltaInHours = (timeNow - modificationTime)/(60*60)
+        debug(" * delta time in hours:", deltaInHours)
+        if deltaInHours >= 1:
+            return False
+        return True
+
+    def SaveForecastData(self, jData, filename):
+        """
+        Remove old file in order to create new file stats and save the data.
+        """
+        debug("WeatherScreenshot.SaveForecastData()")
+        if os.path.exists(filename):
+            os.unlink(filename)
+        with open(filename, 'w') as output:
+            output.write(json.dumps(jData, indent=4))
+
+    def LoadSavedForecastData(self, filename):
+        debug("WeatherScreenshot.LoadSavedForecastData()")
+        with open(filename) as inputFile:
+            jData = json.loads(inputFile.read())
+        return jData
+
 
 class WeatherScreenshot(object):
     def __init__(self, mastodonUsername="", twitterFlag=False, dryRunFlag=False):
         self.filename = None
         debug("\n ### WeatherScreenshot [%s] ### " % time.ctime())
-        if twitterFlag == True and dryRunFlag == False:
-            self.ReadConfig()
+        # config must be read in order to get weather keys, etc
+        self.ReadConfig()
         if len(mastodonUsername) > 0 and dryRunFlag == False:
             self.MastodonAuthenticate(mastodonUsername)
         self.SetTimeStampAndSaveFileName()
         self.CreateDirectories(self.savefile)
         self.dryRunFlag = dryRunFlag
+        self.weatherForecast = WeatherForecast(forecastIOKey=self.credentials["forecast_io_key"],
+            forecastIOLocation=self.credentials["forecast_io_loc"])
 
     def ReadConfig(self):
         """
@@ -281,97 +374,6 @@ class WeatherScreenshot(object):
         debug(f"Saving file {self.savefile}")
         cam = LibCameraInterface()
         cam.get_image(self.savefile)
-
-    def GetForecastFromWeb(self):
-        """
-        Retrieve weather information from forcast.io.
-        """
-        debug("WeatherScreenshot.GetForecastFromWeb()")
-        forecast_io_key = self.credentials["forecast_io_key"]
-        forecast_io_location = self.credentials["forecast_io_loc"]
-
-        debug(" * requesting json about weather")
-        url = f"https://api.darksky.net/forecast/{forecast_io_key}/{forecast_io_location}"
-        req = requests.get(url)
-        jdata = json.loads(req.text)
-
-        return jdata
-
-    def isThereWeatherJson(self):
-        debug("WeatherScreenshot.isThereWeatherJson()")
-        return os.path.exists(WEATHERJSONFILE)
-
-    def isNotTooOldData(self, filename):
-        """
-        If file is older than 1 hour, it is considered outdated.
-        """
-        debug("WeatherScreenshot.isNotTooOldData()")
-        fileStats = os.stat(filename)
-        modificationTime = fileStats.st_mtime
-        timeNow = time.time()
-        deltaInHours = (timeNow - modificationTime)/(60*60)
-        debug(" * delta time in hours:", deltaInHours)
-        if deltaInHours >= 1:
-            return False
-        return True
-
-    def SaveForecastData(self, jData):
-        """
-        Remove old file in order to create new file stats and save the data.
-        """
-        debug("WeatherScreenshot.SaveForecastData()")
-        if os.path.exists(WEATHERJSONFILE):
-            os.unlink(WEATHERJSONFILE)
-        with open(WEATHERJSONFILE, 'w') as output:
-            output.write(json.dumps(jData, indent=4))
-
-    def LoadSavedForecastData(self):
-        debug("WeatherScreenshot.LoadSavedForecastData()")
-        with open(WEATHERJSONFILE) as inputFile:
-            jData = json.loads(inputFile.read())
-        return jData
-
-    def GetWeatherForecast(self):
-        """
-        Check if forecast json file exists and isn't older than 3 hours.
-        Otherwise fetch from forecast.io and save it.
-        """
-        debug("WeatherScreenshot.GetWeatherForecast()")
-        getNewData = False
-        if self.isThereWeatherJson():
-            debug(" * There is a json file")
-            if self.isNotTooOldData(WEATHERJSONFILE):
-                debug(" * Data isn't too old - reuse")
-                getNewData = False
-            else:
-                debug(" * Data is outdated - renew")
-                getNewData = True
-
-        else:
-            debug(" * No json file found")
-            getNewData = True
-
-        if getNewData:
-            debug(" * Getting new data to renew")
-            jData = self.GetForecastFromWeb()
-            self.SaveForecastData(jData)
-        else:
-            debug(" * Re-using already saved data")
-            jData = self.LoadSavedForecastData()
-
-        debug(" * converting from Farenheit to Celsius")
-        summary = jData["currently"]["summary"]
-        temp = jData["currently"]["temperature"]
-        temp = Far2Celsius(temp)
-
-        msg = []
-        msg.append("Stockholm")
-        msg.append(self.prettyTimestamp)
-        msg.append(u"Temperature: %s°C" % temp)
-        msg.append("Summary: %s" %summary)
-
-        debug(" * * Weather update finished")
-        return msg
 
     def SetImageFont(self):
         """
@@ -449,7 +451,13 @@ class WeatherScreenshot(object):
     def SendTwitter(self):
         debug("WeatherScreenshot.SendTwitter()")
         debug(" * Retrieving info...")
-        imageText = self.GetWeatherForecast()
+        imageText = []
+        imageText.append("Stockholm")
+        imageText.append(self.prettyTimestamp)
+        imageText.append(f"Temperature: {self.weatherForecast.GetTemperature()}°C")
+        imageText.append(f"Summary: {self.weatherForecast.GetSummary()}")
+
+        debug(" * * Weather update finished")
 
         if imageText is None:
             imageText = [ f"Just another shot at {self.timestamp}" ]
@@ -484,7 +492,12 @@ class WeatherScreenshot(object):
     def SendMastodon(self):
         debug("WeatherScreenshot.SendMastodon()")
         debug(" * Retrieving info...")
-        imageText = self.GetWeatherForecast()
+
+        imageText = []
+        imageText.append("Stockholm")
+        imageText.append(self.prettyTimestamp)
+        imageText.append(f"Temperature: {self.weatherForecast.GetTemperature()}°C")
+        imageText.append(f"Summary: {self.weatherForecast.GetSummary()}")
 
         if imageText is None:
             imageText = [ f"Just another shot at {self.timestamp}" ]
