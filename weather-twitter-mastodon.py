@@ -8,8 +8,6 @@ and
 http://stackoverflow.com/questions/245447/how-do-i-draw-text-at-an-angle-using-pythons-pil
 """
 
-HOMEDIR = "/home/pi"
-
 import time
 import sys
 import os
@@ -42,6 +40,8 @@ import json
 # src: http://stackoverflow.com/questions/11029717/how-do-i-disable-log-messages-from-the-requests-library
 #requests.packages.urllib3.disable_warnings()
 
+HOMEDIR = os.environ.get("HOME")
+
 DEVICE = "/dev/video0"
 IMGSIZE = (1280, 720)
 HOMEDIR =  os.environ.get("HOME")
@@ -64,6 +64,37 @@ PID = os.getpid()
 LOCKFILE = f"{LOCKDIR}/{LOCKPREFIX}.{PID}"
 
 start_time = time.time()
+
+# src: https://dev.meteostat.net/formats.html#weather-condition-codes
+WeatherConditionCodes = {
+    1: 	"Clear",
+    2 :	"Fair",
+    3 :	"Cloudy",
+    4 :	"Overcast",
+    5 :	"Fog",
+    6 :	"Freezing Fog",
+    7 :	"Light Rain",
+    8 :	"Rain",
+    9 :	"Heavy Rain",
+    10 :	"Freezing Rain",
+    11 :	"Heavy Freezing Rain",
+    12 :	"Sleet",
+    13 :	"Heavy Sleet",
+    14 :	"Light Snowfall",
+    15 :	"Snowfall",
+    16 :	"Heavy Snowfall",
+    17 :	"Rain Shower",
+    18 :	"Heavy Rain Shower",
+    19 :	"Sleet Shower",
+    20 :	"Heavy Sleet Shower",
+    21 : 	"Snow Shower",
+    22 :	"Heavy Snow Shower",
+    23 :	"Lightning",
+    24 :	"Hail",
+    25 :	"Thunderstorm",
+    26 :	"Heavy Thunderstorm",
+    27 :	"Storm"
+}
 
 def runShell(*command):
     return subprocess.check_output(*command)
@@ -93,12 +124,12 @@ class LibCameraInterface:
     def get_image(self, destination):
         debug("LibCameraInterface.get_image()")
         width, height = IMGSIZE
-        command =  [ 
-            "/usr/bin/libcamera-jpeg", 
-            "--width=" + str(width), 
+        command =  [
+            "/usr/bin/libcamera-jpeg",
+            "--width=" + str(width),
             "--height=" + str(height),
             "-o",
-             destination 
+             destination
         ]
         runShell(command)
         darkLevel = darkness(destination)
@@ -222,7 +253,7 @@ class WeatherScreenshot(object):
             config = json.load(tootConfig)
 
         self.mastodon = Mastodon(
-            access_token = config['users'][userid]['access_token'], 
+            access_token = config['users'][userid]['access_token'],
             api_base_url = config['users'][userid]['instance']
             )
         self.me = self.mastodon.me()
