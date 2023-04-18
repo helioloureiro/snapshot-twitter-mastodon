@@ -1,8 +1,8 @@
 blurhash==1.1.4
-certifi==2022.9.24
+certifi==2022.12.07
 charset-normalizer==2.1.1
 decorator==5.1.1
-future==0.18.2
+future==0.18.3
 idna==3.4
 imageio==2.22.4
 Mastodon.py==1.7.0
