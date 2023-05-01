@@ -232,7 +232,7 @@ class WeatherForecast:
         }
     }
     '''
-    def __init__(self, source=Weather.DARKSKY, forecastIOKey=None, forecastIOLocation=None):
+    def __init__(self, source=Weather.OPENMETEO, forecastIOKey=None, forecastIOLocation=None):
         self.source = source
         if source == Weather.DARKSKY:
             self.url = f"https://api.darksky.net/forecast/{forecastIOKey}/{forecastIOLocation}"
