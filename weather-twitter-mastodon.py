@@ -285,7 +285,7 @@ class WeatherForecast:
         if self.GetSource() == Weather.DARKSKY:
              return self.jdata["currently"]["summary"]
         # to be fixed later
-        code =  self.jdata["current_weather"]["code"]
+        code =  self.jdata["current_weather"]["weathercode"]
         return WeatherConditionCodes[int(code)]
 
     def fetchForecastJson(self):
