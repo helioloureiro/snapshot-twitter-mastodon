@@ -29,7 +29,7 @@ import subprocess
 
 ## Trying to fix images too dark
 import numpy as np
-import imageio
+import imageio.v2 as imageio
 
 # fediverse
 from mastodon import Mastodon
@@ -69,9 +69,10 @@ start_time = time.time()
 
 # src: https://dev.meteostat.net/formats.html#weather-condition-codes
 WeatherConditionCodes = {
-    1: 	"Clear",
-    2 :	"Fair",
-    3 :	"Cloudy",
+    0:  "Clear sky",
+    1: 	"Mainly Clear",
+    2 :	"Partily Cloud",
+    3 :	"Overcast",
     4 :	"Overcast",
     5 :	"Fog",
     6 :	"Freezing Fog",
@@ -95,7 +96,31 @@ WeatherConditionCodes = {
     24 :	"Hail",
     25 :	"Thunderstorm",
     26 :	"Heavy Thunderstorm",
-    27 :	"Storm"
+    27 :	"Storm",
+    45 : "Fog",
+    48: "Depositing Rime Fog",
+    51: "Drizzle Light",
+    53: "Drizzle Moderate",
+    55: "Drizzle Dense",
+    56: "Freezing Drizzle Light",
+    57: "Freezing Drizzle Dense",
+    61: "Rain Slight",
+    63: "Rain Moderate",
+    65: "Rain Heavy Intense",
+    66: "Freezing Rain Light",
+    67: "Freezing Rain Heavy Intensit",
+    71: "Snow Fall Slight",
+    73: "Snow Fall Moderate",
+    75: "Snow Fall Heavy Intensit",
+    77: "Snow Grains",
+    80: "Rain Showers Slight",
+    81: "Rain Showers Moderate",
+    82: "Rain Showers Violent",
+    85: "Snow Showers Slight",
+    86: "Snow Showers Heavy",
+    95: "Thunderstorm Slight",
+    96: "Thunderstorm with Slight",
+    99: "Thunderstorm with Heavy Hail"
 }
 
 def runShell(*command):
@@ -254,13 +279,14 @@ class WeatherForecast:
             temperature = self.jdata["currently"]["temperature"]
             return Far2Celsius(temperature)
         # to be fixed later
-        return self.jdata["currently"]["temperature"]
+        return self.jdata["current_weather"]["temperature"]
 
     def GetSummary(self):
         if self.GetSource() == Weather.DARKSKY:
              return self.jdata["currently"]["summary"]
         # to be fixed later
-        return self.jdata["currently"]["summary"]
+        code =  self.jdata["current_weather"]["code"]
+        return WeatherConditionCodes[int(code)]
 
     def fetchForecastJson(self):
         """
@@ -318,8 +344,7 @@ class WeatherScreenshot(object):
         self.SetTimeStampAndSaveFileName()
         self.CreateDirectories(self.savefile)
         self.dryRunFlag = dryRunFlag
-        self.weatherForecast = WeatherForecast(forecastIOKey=self.credentials["forecast_io_key"],
-            forecastIOLocation=self.credentials["forecast_io_loc"])
+        self.weatherForecast = WeatherForecast()
 
     def ReadConfig(self):
         """
