@@ -68,6 +68,8 @@ LOCKFILE = f"{LOCKDIR}/{LOCKPREFIX}.{PID}"
 start_time = time.time()
 
 # src: https://dev.meteostat.net/formats.html#weather-condition-codes
+# Note: it seems open-meteo uses other extra code.
+# src2: https://open-meteo.com/en/docs
 WeatherConditionCodes = {
     0:  "Clear sky",
     1: 	"Mainly Clear",
