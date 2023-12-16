@@ -22,9 +22,7 @@ from enum import Enum
 # import pygame.camera
 import subprocess
 
-
-from PIL import Image
-from PIL import ImageFont, ImageDraw, ImageOps
+from PIL import Image, ImageFont, ImageDraw, ImageOps
 import requests
 
 
@@ -170,7 +168,7 @@ class LibCameraInterface:
         runShell(command)
 
         # test quality
-        img = Image(destination)
+        img = Image.open(destination)
         quality = np.mean(img)
 
         ## too dark
