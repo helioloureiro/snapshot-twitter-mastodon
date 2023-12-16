@@ -169,6 +169,47 @@ class LibCameraInterface:
         ]
         runShell(command)
 
+        # test quality
+        img = Image(destination)
+        quality = np.mean(img)
+
+        ## too dark
+        if quality < 10:
+            self.get_dark_image(destination)
+
+        ## too bright
+        if quality > 200:
+            self.get_brighter_image(destination)
+
+    def get_dark_image(self, destination):
+        debug("LibCameraInterface.get_dark_image()")
+        width, height = IMGSIZE
+        command =  [
+            "/usr/bin/rpicam-still",
+            "--width=" + str(width),
+            "--height=" + str(height),
+            "--brightness=1.0",
+            "--exposure=normal",
+            "-o",
+             destination
+        ]
+        runShell(command)
+
+
+    def get_brighter_image(self, destination):
+        debug("LibCameraInterface.get_brighter_image()")
+        width, height = IMGSIZE
+        command =  [
+            "/usr/bin/rpicam-still",
+            "--width=" + str(width),
+            "--height=" + str(height),
+            "--brightness=-1.0",
+            "--exposure=sport",
+            "-o",
+             destination
+        ]
+        runShell(command)
+
 
 class CameraInterface:
     def __init__(self, sleep_time=30):
