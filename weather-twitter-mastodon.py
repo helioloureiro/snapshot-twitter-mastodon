@@ -186,7 +186,7 @@ class LibCameraInterface:
             "/usr/bin/rpicam-still",
             "--width=" + str(width),
             "--height=" + str(height),
-            "--brightness=1.0",
+            "--brightness=0.8",
             "--exposure=normal",
             "-o",
              destination
@@ -201,7 +201,7 @@ class LibCameraInterface:
             "/usr/bin/rpicam-still",
             "--width=" + str(width),
             "--height=" + str(height),
-            "--brightness=-1.0",
+            "--brightness=-0.8",
             "--exposure=sport",
             "-o",
              destination
