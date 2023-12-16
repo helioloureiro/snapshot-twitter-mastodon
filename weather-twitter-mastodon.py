@@ -11,21 +11,22 @@ http://stackoverflow.com/questions/245447/how-do-i-draw-text-at-an-angle-using-p
 import time
 import sys
 import os
-# pip3 install python-twitter
-import twitter
 import configparser
 import argparse
 import json
-import requests
-from PIL import Image
-from PIL import ImageFont, ImageDraw, ImageOps
-from picturequality import brightness
 import re
-import argparse
+from enum import Enum
+
 # pycamera is gone.  So lets rely on pygame.
 # import pygame
 # import pygame.camera
 import subprocess
+
+
+from PIL import Image
+from PIL import ImageFont, ImageDraw, ImageOps
+import requests
+
 
 ## Trying to fix images too dark
 import numpy as np
@@ -33,9 +34,12 @@ import imageio.v2 as imageio
 
 # fediverse
 from mastodon import Mastodon
-import json
 
-from enum import Enum
+# pip3 install python-twitter
+import twitter
+
+import pygame
+import pygame.camera
 
 
 # stop annoying messages
@@ -81,24 +85,24 @@ WeatherConditionCodes = {
     7 :	"Light Rain",
     8 :	"Rain",
     9 :	"Heavy Rain",
-    10 :	"Freezing Rain",
-    11 :	"Heavy Freezing Rain",
-    12 :	"Sleet",
-    13 :	"Heavy Sleet",
-    14 :	"Light Snowfall",
-    15 :	"Snowfall",
-    16 :	"Heavy Snowfall",
-    17 :	"Rain Shower",
-    18 :	"Heavy Rain Shower",
-    19 :	"Sleet Shower",
-    20 :	"Heavy Sleet Shower",
-    21 : 	"Snow Shower",
-    22 :	"Heavy Snow Shower",
-    23 :	"Lightning",
-    24 :	"Hail",
-    25 :	"Thunderstorm",
-    26 :	"Heavy Thunderstorm",
-    27 :	"Storm",
+    10 : "Freezing Rain",
+    11 : "Heavy Freezing Rain",
+    12 : "Sleet",
+    13 : "Heavy Sleet",
+    14 : "Light Snowfall",
+    15 : "Snowfall",
+    16 : "Heavy Snowfall",
+    17 : "Rain Shower",
+    18 : "Heavy Rain Shower",
+    19 : "Sleet Shower",
+    20 : "Heavy Sleet Shower",
+    21 : "Snow Shower",
+    22 : "Heavy Snow Shower",
+    23 : "Lightning",
+    24 : "Hail",
+    25 : "Thunderstorm",
+    26 : "Heavy Thunderstorm",
+    27 : "Storm",
     45 : "Fog",
     48: "Depositing Rime Fog",
     51: "Drizzle Light",
@@ -157,34 +161,17 @@ class LibCameraInterface:
         debug("LibCameraInterface.get_image()")
         width, height = IMGSIZE
         command =  [
-            "/usr/bin/libcamera-jpeg",
+            "/usr/bin/rpicam-still",
             "--width=" + str(width),
             "--height=" + str(height),
             "-o",
              destination
         ]
         runShell(command)
-        darkLevel = darkness(destination)
-        if darkLevel <= 10:
-            ## Too dark, increase brightness
-            print("Detected too dark - trying to fix brightness")
-            command = [
-                "/usr/bin/libcamera-jpeg",
-                "--width=" + str(width),
-                "--height=" + str(height),
-                "--shutter=0.01",
-                "--ev=-2",
-                "--timeout=10000",
-                "-o",
-                destination
-            ]
-            runShell(command)
 
 
 class CameraInterface:
     def __init__(self, sleep_time=30):
-        import pygame
-        import pygame.camera
         self.waiting = sleep_time
 
         debug("Pygame init")
