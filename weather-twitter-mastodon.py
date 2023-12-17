@@ -202,7 +202,7 @@ class LibCameraInterface:
             "--width=" + str(width),
             "--height=" + str(height),
             "--brightness=-0.1",
-            "--shutter=200",
+            "--shutter=2000",
             "--exposure=sport",
             "-o",
              destination
