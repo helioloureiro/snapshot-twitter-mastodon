@@ -146,12 +146,12 @@ class LockFile:
         Return true to "locked" and false in case of failure (already in use).
         """
 
-        self._wait_for_lock_release()
+        _wait_for_lock_release()
         with open(LOCKFILE, 'w', encoding="utf-8") as fd:
             fd.write(f"{PID}\n")
         return True
 
-    def _wait_for_lock_release(self):
+    def _wait_for_lock_release():
         start_time = time.perf_counter()
         directory_list = os.listdir(LOCKDIR)
         locked_file = None
