@@ -145,29 +145,30 @@ class LockFile:
         Create a pid based lock file.
         Return true to "locked" and false in case of failure (already in use).
         """
-        directory = os.listdir(LOCKDIR)
-        lockedfile = None
-        for filename in directory:
-            if not re.search(LOCKPREFIX, filename):
-                continue
-            lockedfile = filename
-        if lockedfile:
-            # double check
-            p = lockedfile.split(".")[-1]
-            pid = int(p)
-            try:
-                # SIGNAL 18 is SIGCONT
-                # it should be ignored
-                os.kill(pid, 18)
-                print("Process already running")
-                return False
-            except ProcessLookupError:
-                debug(f"Dead file found ({LOCKDIR}/{lockedfile}).  Removing.")
-                os.unlink(f"{LOCKDIR}/{lockedfile}")
 
+        self._wait_for_lock_release()
         with open(LOCKFILE, 'w', encoding="utf-8") as fd:
             fd.write(f"{PID}\n")
         return True
+
+    def _wait_for_lock_release(self):
+        start_time = time.perf_counter()
+        directory_list = os.listdir(LOCKDIR)
+        locked_file = None
+        for filename in directory_list:
+            if not re.search(LOCKPREFIX, filename):
+                continue
+            locked_file = filename
+
+        if locked_file is None:
+            return
+
+        while True:
+            if time.perf_counter() - start_time > 60:
+                raise Exception("It can't create lock file")
+            if not os.path.exists(locked_file):
+                return
+            time.sleep(3)
 
     @staticmethod
     def remove():
