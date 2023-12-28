@@ -135,12 +135,12 @@ class CameraInterface:
         raw_image = Image.frombytes('RGB', image.get_size(), raw)
         raw_image.save(self.image_file)
 
-class Unix:
+class LockFile:
     """
     Class to handle lock files
     """
     @staticmethod
-    def lockpid():
+    def create():
         """
         Create a pid based lock file.
         Return true to "locked" and false in case of failure (already in use).
@@ -170,7 +170,7 @@ class Unix:
         return True
 
     @staticmethod
-    def unlockpid():
+    def remove():
         """
         Remove the lock file.
         """
@@ -378,7 +378,7 @@ if __name__ == '__main__':
         sys.exit(os.EX_CONFIG)
 
     try:
-        if Unix.lockpid():
+        if LockFile.create():
             shot = WindowScreenshot(args.mastodonuser, args.dryrun)
             start_time = time.perf_counter()
             while time.perf_counter() - start_time < args.timeout:
@@ -393,7 +393,7 @@ if __name__ == '__main__':
                     print('Skipped SendMastodon since or username is missing or its length is zero')
 
                 time.sleep(10)
-            Unix.unlockpid()
+            LockFile.remove()
     except KeyboardInterrupt:
-        Unix.unlockpid()
+        LockFile.remove()
         sys.exit(0)
