@@ -361,6 +361,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--timeout',
         default=300,
+        type=int,
         help="The time to keep taking photos in sequence." + \
         " Default is 300s (5 minutes).")
     args = parser.parse_args()
