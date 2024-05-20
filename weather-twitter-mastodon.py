@@ -291,7 +291,7 @@ class WeatherForecast:
         if source == Weather.DARKSKY:
             self.url = f"https://api.darksky.net/forecast/{forecastIOKey}/{forecastIOLocation}"
         elif source == Weather.OPENMETEO:
-            self.url = "https://api.open-meteo.com/v1/metno?latitude=59.33&longitude=18.07&current_weather=true"
+            self.url = "https://api.open-meteo.com/v1/metno?latitude=59.3544367&longitude=17.8822503&current_weather=true"
         else:
             raise Exception("Unknow weather forecast source.")
 
@@ -519,7 +519,11 @@ class WeatherScreenshot(object):
             self.UpdateImageWithText(imageText, self.savefile)
 
         # adding the credit to the right guys (awesome guys btw)
-        imageText.append("via http://forecast.io/#/f/59.4029,17.9436")
+        if self.WeatherForecast.source == Weather.Overcast:
+            imageText.append("via http://forecast.io/#/f/59.4029,17.9436")
+        elif self.WeatherForecast.source == Weather.OPENMETEO:
+            imageText.append("via https://api.open-meteo.com/v1/metno?latitude=59.3544367&longitude=17.8822503&current_weather=true")
+
         twitterText = "\n".join(imageText)
 
         if self.dryRunFlag:
@@ -559,7 +563,10 @@ class WeatherScreenshot(object):
             self.UpdateImageWithText(imageText, self.savefile)
 
         # adding the credit to the right guys (awesome guys btw)
-        imageText.append("via http://forecast.io/#/f/59.4029,17.9436")
+        if self.WeatherForecast.source == Weather.Overcast:
+            imageText.append("via http://forecast.io/#/f/59.4029,17.9436")
+        elif self.WeatherForecast.source == Weather.OPENMETEO:
+            imageText.append("via https://api.open-meteo.com/v1/metno?latitude=59.3544367&longitude=17.8822503&current_weather=true")
         tootText = "\n".join(imageText)
 
         if self.dryRunFlag:
