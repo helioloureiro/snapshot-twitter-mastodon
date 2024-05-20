@@ -519,9 +519,9 @@ class WeatherScreenshot(object):
             self.UpdateImageWithText(imageText, self.savefile)
 
         # adding the credit to the right guys (awesome guys btw)
-        if self.WeatherForecast.source == Weather.Overcast:
+        if self.weatherForecast.source == Weather.Overcast:
             imageText.append("via http://forecast.io/#/f/59.4029,17.9436")
-        elif self.WeatherForecast.source == Weather.OPENMETEO:
+        elif self.weatherForecast.source == Weather.OPENMETEO:
             imageText.append("via https://api.open-meteo.com/v1/metno?latitude=59.3544367&longitude=17.8822503&current_weather=true")
 
         twitterText = "\n".join(imageText)
@@ -563,9 +563,9 @@ class WeatherScreenshot(object):
             self.UpdateImageWithText(imageText, self.savefile)
 
         # adding the credit to the right guys (awesome guys btw)
-        if self.WeatherForecast.source == Weather.Overcast:
+        if self.weatherForecast.source == Weather.Overcast:
             imageText.append("via http://forecast.io/#/f/59.4029,17.9436")
-        elif self.WeatherForecast.source == Weather.OPENMETEO:
+        elif self.weatherForecast.source == Weather.OPENMETEO:
             imageText.append("via https://api.open-meteo.com/v1/metno?latitude=59.3544367&longitude=17.8822503&current_weather=true")
         tootText = "\n".join(imageText)
 
