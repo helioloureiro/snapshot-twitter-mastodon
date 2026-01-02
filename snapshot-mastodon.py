@@ -1,6 +1,10 @@
-#! /usr/bin/python3 -u
-# -*- coding: utf-8 -*-
-
+#! /usr/bin/env -S uv run --script
+# /// script
+# dependencies = [
+#   "pygame",
+#   "numpy"
+# ]
+# ///
 """
 Based in:
 http://stackoverflow.com/questions/15870619/python-webcam-http-streaming-and-image-capture
@@ -8,14 +12,15 @@ http://stackoverflow.com/questions/15870619/python-webcam-http-streaming-and-ima
 
 HOMEDIR = "/home/pi"
 
-import pygame
-import pygame.camera
 import time
 import sys
 import os
-import twitter
 import ConfigParser
 import datetime
+
+# External
+import pygame
+import pygame.camera
 
 # test machine?
 if os.uname()[1] == 'elxaf7qtt32':
@@ -108,20 +113,7 @@ def TweetPhoto():
         print("Failed to find configuration file {configuration}")
         sys.exit(1)
     cfg.read(configuration)
-    cons_key = cfg.get("TWITTER", "CONS_KEY")
-    cons_sec = cfg.get("TWITTER", "CONS_SEC")
-    acc_key = cfg.get("TWITTER", "ACC_KEY")
-    acc_sec = cfg.get("TWITTER", "ACC_SEC")
 
-    print("Autenticating in Twitter")
-    # App python-tweeter
-    # https://dev.twitter.com/apps/815176
-    tw = twitter.Api(
-        consumer_key = cons_key,
-        consumer_secret = cons_sec,
-        access_token_key = acc_key,
-        access_token_secret = acc_sec
-        )
     print("Posting...")
     msg = get_content()
     if not msg:
@@ -131,11 +123,6 @@ def TweetPhoto():
     if msg:
         msg = f"{msg} #pyconse"
         print(msg)
-        try:
-            tw.PostMedia(status = msg,media = filename)
-            print("done!")
-        except:
-            None
     else:
         print("no message available")
     #print "Removing media file %s" % filename

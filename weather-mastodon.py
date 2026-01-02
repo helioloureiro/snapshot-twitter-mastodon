@@ -1,6 +1,13 @@
-#! /usr/bin/env python3
-# -*- coding: utf-8 -*-
-
+#! /usr/bin/env -S uv run --script
+# /// script
+# dependencies = [
+#   "pillow",
+#   "requests",
+#   "pygame",
+#   "numpy",
+#   "imageio"
+# ]
+# ///
 """
 Based in:
 http://stackoverflow.com/questions/15870619/python-webcam-http-streaming-and-image-capture
@@ -22,9 +29,9 @@ from enum import Enum
 # import pygame.camera
 import subprocess
 
+# external
 from PIL import Image, ImageFont, ImageDraw, ImageOps
 import requests
-
 
 ## Trying to fix images too dark
 import numpy as np
@@ -32,9 +39,6 @@ import imageio.v2 as imageio
 
 # fediverse
 from mastodon import Mastodon
-
-# pip3 install python-twitter
-import twitter
 
 import pygame
 import pygame.camera
@@ -387,10 +391,6 @@ class WeatherScreenshot(object):
         cfg.read(CONFIGURATION)
 
         self.credentials = {
-            "twitter_cons_key" : cfg.get("TWITTER", "CONS_KEY"),
-            "twitter_cons_sec" : cfg.get("TWITTER", "CONS_SEC"),
-            "twitter_acc_key"  : cfg.get("TWITTER", "ACC_KEY"),
-            "twitter_acc_sec"  : cfg.get("TWITTER", "ACC_SEC"),
             "forecast_io_key"  : cfg.get("FORECAST.IO", "KEY"),
             "forecast_io_loc"  : cfg.get("FORECAST.IO", "LOCATION")
         }
@@ -502,51 +502,6 @@ class WeatherScreenshot(object):
         image.paste(ImageOps.colorize(w, BLACK, BLACK), (0,0), w)
         image.save(imageFile)
 
-    def SendTwitter(self):
-        debug("WeatherScreenshot.SendTwitter()")
-        debug(" * Retrieving info...")
-        imageText = []
-        imageText.append("Stockholm")
-        imageText.append(self.prettyTimestamp)
-        imageText.append(f"Temperature: {self.weatherForecast.GetTemperature()}°C")
-        imageText.append(f"Summary: {self.weatherForecast.GetSummary()}")
-
-        debug(" * * Weather update finished")
-
-        if imageText is None:
-            imageText = [ f"Just another shot at {self.timestamp}" ]
-        else:
-            self.UpdateImageWithText(imageText, self.savefile)
-
-        # adding the credit to the right guys (awesome guys btw)
-        if self.weatherForecast.source == Weather.DARKSKY:
-            imageText.append("via http://forecast.io/#/f/59.4029,17.9436")
-        elif self.weatherForecast.source == Weather.OPENMETEO:
-            imageText.append("via https://api.open-meteo.com/v1/metno?latitude=59.3544367&longitude=17.8822503&current_weather=true")
-
-        twitterText = "\n".join(imageText)
-
-        if self.dryRunFlag:
-            print("Stopping here because of dry-run mode.")
-            return
-
-        debug(" * Autenticating in Twitter")
-        # App python-tweeter
-        # https://dev.twitter.com/apps/815176
-        tw = twitter.Api(
-            consumer_key = self.credentials["twitter_cons_key"],
-            consumer_secret = self.credentials["twitter_cons_sec"],
-            access_token_key = self.credentials["twitter_acc_key"],
-            access_token_secret = self.credentials["twitter_acc_sec"]
-            )
-
-        try:
-            debug("Posting on Twitter")
-            tw.PostUpdate(status = twitterText, media = self.savefile)
-            debug("done!")
-        except Exception as e:
-            print("Failed for some reason:", e)
-
     def SendMastodon(self):
         debug("WeatherScreenshot.SendMastodon()")
         debug(" * Retrieving info...")
@@ -563,10 +518,7 @@ class WeatherScreenshot(object):
             self.UpdateImageWithText(imageText, self.savefile)
 
         # adding the credit to the right guys (awesome guys btw)
-        if self.weatherForecast.source == Weather.DARKSKY:
-            imageText.append("via http://forecast.io/#/f/59.4029,17.9436")
-        elif self.weatherForecast.source == Weather.OPENMETEO:
-            imageText.append("via https://api.open-meteo.com/v1/metno?latitude=59.3544367&longitude=17.8822503&current_weather=true")
+        imageText.append("via http://forecast.io/#/f/59.4029,17.9436")
         tootText = "\n".join(imageText)
 
         if self.dryRunFlag:
@@ -585,7 +537,6 @@ class WeatherScreenshot(object):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='It takes a snapshot from camera, gets current weather forecast and publishes onlne')
     parser.add_argument("--mastodonuser", help="Your registered mastodon account at toot configuration")
-    parser.add_argument("--twitter", action='store_true', help="To send the post to Twitter")
     parser.add_argument('--dryrun', action='store_true', default=False,
             help='Run as dry-run or not.  If dry-run is set to \"true\", no message is sent on Twitter and/or Mastodon')
     args = parser.parse_args()
@@ -605,10 +556,6 @@ if __name__ == '__main__':
         if Unix.lockpid():
             shot = WeatherScreenshot(args.mastodonuser, args.twitter, args.dryrun)
             shot.GetPhoto()
-            if args.twitter == True:
-                shot.SendTwitter()
-            else:
-                print('Skipped SendTwitter since flag is False')
             if args.mastodonuser is not None and len(args.mastodonuser) > 0:
                 shot.SendMastodon()
             else:

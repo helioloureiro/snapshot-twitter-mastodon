@@ -1,14 +1,21 @@
-#! /usr/bin/python3 -u
-# -*- coding: utf-8 -*-
+#! /usr/bin/env -S uv run --script
+# /// script
+# dependencies = [
+#   "pillow",
+#   "numpy"
+# ]
+# ///
 
 import sys
 import os
+import time
+
+# external
 try:
     import Image
 except ImportError:
     from PIL import Image
 import numpy as np
-import time
 
 def usage(msg):
     if msg:

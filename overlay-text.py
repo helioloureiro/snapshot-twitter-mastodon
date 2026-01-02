@@ -1,6 +1,9 @@
-#! /usr/bin/python
-# -*- coding: utf-8 -*-
-
+#! /usr/bin/env -S uv run --script
+# /// script
+# dependencies = [
+#   "pillow"
+# ]
+# ///
 # source: http://stackoverflow.com/questions/245447/how-do-i-draw-text-at-an-angle-using-pythons-pil
 
 import Image

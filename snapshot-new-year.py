@@ -1,6 +1,12 @@
-#! /usr/bin/env python3 
+#! /usr/bin/env -S uv run --script
+# /// script
+# dependencies = [
+#   "pillow",
+#   "Mastodon.py",
+#   "pygame"
+# ]
+# ///
 # pylint: disable=C0103
-# -*- coding: utf-8 -*-
 
 """
 Based in:
@@ -17,6 +23,8 @@ import json
 import re
 import subprocess
 
+
+# external
 from PIL import Image, ImageFont, ImageDraw, ImageOps
 
 # fediverse
